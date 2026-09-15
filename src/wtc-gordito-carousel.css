@@ -1,0 +1,118 @@
+/**
+ * wtc-gordito-carousel core styles. Keep this file structural; public usage, accessibility, CSS
+ * variables, and state attributes are documented in README.md.
+ * Selectors use :where() inside @layer so ordinary app CSS can override them
+ * as the specificity is kept at 0.
+ * Only styles required for carousel mechanics live here.
+ * Consumers are responsible for visual styling and can override the basic track
+ * transition with ordinary CSS.
+ *
+ * State attributes are set on the carousel root [data-wtcg-carousel]:
+ *   [data-wtcg-instant]   – Invisible position corrections (initial layout,
+ *     responsive refresh, infinite-loop clone normalization). Track transform
+ *     must not animate.
+ *   [data-wtcg-dragging]  – Active pointer drag on the list. Track must follow
+ *     the pointer, not animate.
+ *   [data-wtcg-draggable] – Pointer dragging is enabled. List gets grab cursor.
+ *
+ * IMPORTANT: These rules live in @layer wtc-gordito-carousel with :where()
+ * selectors (zero specificity). Any consumer CSS with non-zero specificity or
+ * unlayered CSS will override BOTH the default transition AND the suppression
+ * rules. Consumers who customize the track transition MUST re-include the
+ * suppression rules with appropriate specificity (see README "Mandatory
+ * suppression rules" section).
+ *
+ * Slide-level transitions (opacity, scale, etc.) are NOT affected by any
+ * state attribute and should remain active during drag and instant corrections.
+ */
+
+@layer wtc-gordito-carousel {
+  :where([data-wtcg-carousel]) {
+    --wtcg-slides: 1;
+    --wtcg-scroll: 1;
+    --wtcg-slide-size: auto;
+    --wtcg-slide-gap: 0px;
+    --wtcg-center-padding: 0px;
+    --wtcg-pagination-gap: 0.5rem;
+
+    position: relative;
+    display: block;
+    box-sizing: border-box;
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :where([data-wtcg-list]) {
+    position: relative;
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
+  :where([data-wtcg-carousel][data-wtcg-center] [data-wtcg-list]) {
+    padding-inline: var(--wtcg-center-padding);
+  }
+
+  :where([data-wtcg-track]) {
+    display: flex;
+    gap: var(--wtcg-slide-gap);
+    margin: 0 auto;
+    padding: 0;
+    position: relative;
+    transition: transform 300ms ease;
+    width: max-content;
+  }
+
+  /* Suppression rules — track transform must NOT animate under these states.
+       State attributes live on the carousel root [data-wtcg-carousel]. */
+  :where(
+    [data-wtcg-carousel][data-wtcg-instant] [data-wtcg-track],
+    [data-wtcg-carousel][data-wtcg-dragging] [data-wtcg-track]
+  ) {
+    transition: none;
+  }
+
+  /* Cursor states — set on carousel root, applied to list via descendant selector */
+  :where([data-wtcg-carousel][data-wtcg-draggable] [data-wtcg-list]) {
+    cursor: grab;
+    user-select: none;
+  }
+
+  :where([data-wtcg-carousel][data-wtcg-dragging] [data-wtcg-list]) {
+    cursor: grabbing;
+  }
+
+  :where([data-wtcg-slide]) {
+    display: none;
+    flex: 0 0 auto;
+    width: var(--wtcg-slide-size);
+    box-sizing: border-box;
+    /* Prevent flex items from collapsing in Safari. */
+    min-width: 0;
+    min-height: 1px;
+    margin: 0;
+  }
+
+  :where([data-wtcg-carousel][data-wtcg-initialized] [data-wtcg-slide]) {
+    display: block;
+  }
+
+  :where([data-wtcg-pagination]) {
+    display: flex;
+    gap: var(--wtcg-pagination-gap);
+    justify-content: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  :where([data-wtcg-page]) {
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where([data-wtcg-track]) {
+      transition: none;
+    }
+  }
+}

@@ -3,5 +3,8 @@
   "categories": {
     "correctness": "warn",
     "suspicious": "warn"
+  },
+  "rules": {
+    "no-underscore-dangle": ["error", { "allow": ["_cloneCount"] }]
   }
 }
