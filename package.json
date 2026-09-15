@@ -1,0 +1,35 @@
+{
+  "name": "@wethegit/gordito-carousel",
+  "version": "0.0.0",
+  "description": "A robust carousel with support for infinite slides and touch.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wethegit/wtc-gordito.git"
+  },
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint --no-error-on-unmatched-pattern .",
+    "lint:fix": "oxlint --fix --no-error-on-unmatched-pattern .",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run format:check && npm run lint && npm run typecheck",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.3",
+    "husky": "^9.1.7",
+    "oxfmt": "^0.68.0",
+    "oxlint": "^1.83.0",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
