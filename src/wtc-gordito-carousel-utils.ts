@@ -30,7 +30,10 @@ export function toElement(
   if (value instanceof HTMLElement) return value;
   if (value === window) return window;
   if (value === document) return document;
-  if (typeof value === 'string') return document.querySelector(value);
+  if (typeof value === 'string') {
+    const element = document.querySelector(value);
+    return element instanceof HTMLElement ? element : fallback;
+  }
   return fallback || null;
 }
 
