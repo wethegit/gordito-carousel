@@ -3,7 +3,7 @@
  * into a true `Array`.
  *
  * @template T
- * @param value
+ * @param {ArrayLike<T>|null|undefined} value
  * @returns {T[]}
  */
 export function toArray<T>(value: ArrayLike<T> | null | undefined): T[] {
@@ -32,7 +32,7 @@ export function toElement(
   if (value === document) return document;
   if (typeof value === 'string') {
     const element = document.querySelector(value);
-    return element instanceof HTMLElement ? element : fallback;
+    return element instanceof HTMLElement ? element : fallback || null;
   }
   return fallback || null;
 }
@@ -68,8 +68,6 @@ export function cssNumber(
  * @returns {Element|null}
  */
 export function createElementFromHtml(html: string): Element | null {
-  // neat little function to deal with random HTML where you need
-  // to replace just parts of it without regex shenanigans
   const template = document.createElement('template');
   template.innerHTML = html.trim();
   return template.content.firstElementChild;
