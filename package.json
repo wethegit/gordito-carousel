@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/wethegit/gordito-carousel.git"
   },
-  "style": "./dist/style.css",
+  "style": "./dist/wtc-gordito-carousel.css",
   "files": [
     "dist"
   ],
@@ -25,7 +25,7 @@
     },
     "./wtc-gordito-carousel.css": "./dist/wtc-gordito-carousel.css",
     "./package.json": "./package.json",
-    "./style.css": "./dist/style.css"
+    "./style.css": "./dist/wtc-gordito-carousel.css"
   },
   "publishConfig": {
     "access": "public"
@@ -65,5 +65,5 @@
   "engines": {
     "node": ">=24"
   },
-  "css": "./dist/style.css"
+  "css": "./dist/wtc-gordito-carousel.css"
 }
