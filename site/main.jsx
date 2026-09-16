@@ -367,6 +367,8 @@ const snippetSet = ({
   interactive = false,
   responsive = false,
   deck = false,
+  fan = false,
+  cardCarousel = false,
 }) => {
   const arrows = arrowsInPagination
     ? '    <li><button data-wtcg-prev>← Prev</button></li>\n'
@@ -380,15 +382,25 @@ const snippetSet = ({
     : '    <li data-wtcg-slide><figure className="photo-slide"><img alt="Slide title" /><figcaption>Slide title</figcaption></figure></li>';
   const style = deck
     ? `.deck [data-wtcg-list] { --wtcg-slide-size: var(--card); overflow: visible; }\n.deck [data-wtcg-track] { transition: transform 500ms cubic-bezier(.22, 1, .36, 1); }\n.deck .photo-slide { transform: rotate(clamp(-80deg, calc(var(--wtcg-slide-offset, 0) * 9deg), 80deg)); transition: transform 500ms cubic-bezier(.22, 1, .36, 1); }\n.deck[data-wtcg-dragging] .photo-slide, .deck[data-wtcg-instant] .photo-slide { transition: none; }`
-    : responsive
-      ? `.responsive [data-wtcg-list] { --wtcg-slides: 1; --wtcg-slide-size: 100cqw; }\n@container (min-width: 42rem) { .responsive [data-wtcg-list] { --wtcg-slides: 2; } }\n@container (min-width: 64rem) { .responsive [data-wtcg-list] { --wtcg-slides: 4; } }`
-      : className === 'natural'
-        ? `.natural [data-wtcg-list] { --wtcg-slides: 3; --wtcg-slide-size: auto; }\n.natural .photo-slide { width: var(--asset-width); }`
-        : className === 'center'
-          ? `.center [data-wtcg-list] { --wtcg-slides: 3; --wtcg-slide-size: auto; padding-block: 55px; }\n.center .photo-slide { width: clamp(240px, 31cqw, 380px); transform: scale(calc(1 - min(var(--wtcg-slide-distance, 0), 2) * .1)); }`
-          : className === 'interactive'
-            ? `.interactive [data-wtcg-list] { --wtcg-slides: 2; --wtcg-scroll: 2; --wtcg-slide-size: calc((100cqw - var(--wtcg-slide-gap)) / 2); overflow: visible; }\n.story-slide { display: grid; grid-template-columns: 1fr 1fr; }`
-            : `.${className} [data-wtcg-list] { --wtcg-slides: 1; --wtcg-slide-size: 100cqw; }`;
+    : fan
+      ? `.fan [data-wtcg-list] { --wtcg-slides: 3; --wtcg-slide-size: clamp(170px, 24cqw, 290px); overflow: visible; padding-block: 45px 70px; }
+.fan [data-wtcg-track] { transition: transform 520ms cubic-bezier(.22, 1, .36, 1); }
+.fan .photo-slide { transform: translateY(calc(min(var(--wtcg-slide-distance, 0), 3) * 12px)) rotate(calc(var(--wtcg-slide-offset, 0) * 8deg)); opacity: calc(1 - min(var(--wtcg-slide-distance, 0), 3) * .16); transition: transform 520ms cubic-bezier(.22, 1, .36, 1), opacity 520ms ease; }
+.fan[data-wtcg-dragging] [data-wtcg-track], .fan[data-wtcg-instant] [data-wtcg-track], .fan[data-wtcg-dragging] .photo-slide, .fan[data-wtcg-instant] .photo-slide { transition: none; }`
+      : cardCarousel
+        ? `.card-carousel [data-wtcg-list] { --wtcg-slides: 3; --wtcg-slide-size: clamp(180px, 24cqw, 300px); overflow: visible; padding-block: 55px 90px; }
+.card-carousel [data-wtcg-track] { transition: transform 500ms cubic-bezier(.22, 1, .36, 1); }
+.card-carousel .photo-slide { transform: translateX(calc(var(--wtcg-slide-offset, 0) * -1 * var(--card-width) + sin(calc(var(--wtcg-slide-offset, 0) * 12deg)) * var(--card-radius))) translateY(calc((1 - cos(calc(var(--wtcg-slide-offset, 0) * 12deg))) * var(--card-drop))) rotate(calc(var(--wtcg-slide-offset, 0) * 7deg)) scale(calc(1 - min(var(--wtcg-slide-distance, 0), 4) * var(--card-depth))); opacity: calc(1 - min(var(--wtcg-slide-distance, 0), 4) * .12); transition: transform 500ms cubic-bezier(.22, 1, .36, 1), opacity 500ms ease; }
+.card-carousel[data-wtcg-dragging] [data-wtcg-track], .card-carousel[data-wtcg-instant] [data-wtcg-track], .card-carousel[data-wtcg-dragging] .photo-slide, .card-carousel[data-wtcg-instant] .photo-slide { transition: none; }`
+        : responsive
+          ? `.responsive [data-wtcg-list] { --wtcg-slides: 1; --wtcg-slide-size: 100cqw; }\n@container (min-width: 42rem) { .responsive [data-wtcg-list] { --wtcg-slides: 2; } }\n@container (min-width: 64rem) { .responsive [data-wtcg-list] { --wtcg-slides: 4; } }`
+          : className === 'natural'
+            ? `.natural [data-wtcg-list] { --wtcg-slides: 3; --wtcg-slide-size: auto; }\n.natural .photo-slide { width: var(--asset-width); }`
+            : className === 'center'
+              ? `.center [data-wtcg-list] { --wtcg-slides: 3; --wtcg-slide-size: auto; padding-block: 55px; }\n.center .photo-slide { width: clamp(240px, 31cqw, 380px); transform: scale(calc(1 - min(var(--wtcg-slide-distance, 0), 2) * .1)); }`
+              : className === 'interactive'
+                ? `.interactive [data-wtcg-list] { --wtcg-slides: 2; --wtcg-scroll: 2; --wtcg-slide-size: calc((100cqw - var(--wtcg-slide-gap)) / 2); overflow: visible; }\n.story-slide { display: grid; grid-template-columns: 1fr 1fr; }`
+                : `.${className} [data-wtcg-list] { --wtcg-slides: 1; --wtcg-slide-size: 100cqw; }`;
   return {
     markup: `<section class="${className}" data-wtcg-carousel>\n  <div data-wtcg-list><ul data-wtcg-track>\n${slide}\n  </ul></div>\n${arrowsInPagination ? '' : arrows}${pages ? `  <div role="group" aria-label="Choose slide">\n${pages}\n  </div>` : ''}\n</section>`,
     styles: style,
@@ -435,6 +447,34 @@ const deck = snippetSet({
   count: 8,
   pagination: true,
   deck: true,
+  options: {
+    centerMode: true,
+    pagination: true,
+    drag: 'free',
+    focusOnSelect: true,
+    infinite: true,
+    initialSlide: 2,
+  },
+});
+const fan = snippetSet({
+  className: 'fan',
+  count: 8,
+  pagination: true,
+  fan: true,
+  options: {
+    centerMode: true,
+    pagination: true,
+    drag: 'free',
+    focusOnSelect: true,
+    infinite: true,
+    initialSlide: 1,
+  },
+});
+const cardCarousel = snippetSet({
+  className: 'card-carousel',
+  count: 8,
+  pagination: true,
+  cardCarousel: true,
   options: {
     centerMode: true,
     pagination: true,
@@ -510,7 +550,7 @@ function App() {
           <div>
             <p className="kicker">The demo gallery</p>
             <h2>
-              Eight ways to
+              Ten ways to
               <br />
               <i>move through</i> content.
             </h2>
@@ -610,6 +650,44 @@ function App() {
         />
         <Demo
           number="08"
+          eyebrow="Card fan"
+          title="A fan that follows the pointer"
+          description="Cards keep their own angle and depth while the track follows the drag. Release to settle on the nearest card."
+          options={{
+            centerMode: true,
+            pagination: true,
+            drag: 'free',
+            focusOnSelect: true,
+            infinite: true,
+            initialSlide: 1,
+          }}
+          className="fan"
+          full
+          markup={fan.markup}
+          styles={fan.styles}
+          script={fan.script}
+        />
+        <Demo
+          number="09"
+          eyebrow="Card carousel"
+          title="A carousel with a little depth"
+          description="A compact card row uses the slide offset to arc, lift, and fade neighboring cards without leaving the carousel contract."
+          options={{
+            centerMode: true,
+            pagination: true,
+            drag: 'free',
+            focusOnSelect: true,
+            infinite: true,
+            initialSlide: 2,
+          }}
+          className="card-carousel"
+          full
+          markup={cardCarousel.markup}
+          styles={cardCarousel.styles}
+          script={cardCarousel.script}
+        />
+        <Demo
+          number="10"
           eyebrow="Focus"
           title="Interactive slide content"
           description="Only the active rendered range is tabbable. Try tabbing through the slide, then drag it away."

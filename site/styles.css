@@ -589,6 +589,73 @@ main {
 .deck [data-wtcg-slide]:not([data-wtcg-active]) .photo-slide {
   pointer-events: none;
 }
+.fan {
+  --wtcg-slide-gap: 0px;
+  --wtcg-center-padding: 8vw;
+}
+.fan [data-wtcg-list] {
+  --wtcg-slides: 3;
+  --wtcg-slide-size: clamp(170px, 24cqw, 290px);
+  padding-block: 45px 70px;
+  overflow: visible;
+}
+.fan [data-wtcg-track] {
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fan .photo-slide {
+  height: 355px;
+  transform: translateY(calc(min(var(--wtcg-slide-distance, 0), 3) * 12px))
+    rotate(calc(var(--wtcg-slide-offset, 0) * 8deg));
+  opacity: calc(1 - min(var(--wtcg-slide-distance, 0), 3) * 0.16);
+  transition:
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 520ms ease;
+}
+.fan[data-wtcg-dragging] [data-wtcg-track],
+.fan[data-wtcg-instant] [data-wtcg-track],
+.fan[data-wtcg-dragging] .photo-slide,
+.fan[data-wtcg-instant] .photo-slide {
+  transition: none;
+}
+.card-carousel {
+  --wtcg-slide-gap: 10px;
+  --wtcg-center-padding: 8vw;
+  --card-width: clamp(180px, 24cqw, 300px);
+  --card-radius: clamp(210px, 35vw, 500px);
+  --card-drop: clamp(50px, 8vw, 90px);
+  --card-depth: 0.07;
+}
+.card-carousel [data-wtcg-list] {
+  --wtcg-slides: 3;
+  --wtcg-slide-size: var(--card-width);
+  padding-block: 55px 90px;
+  overflow: visible;
+}
+.card-carousel [data-wtcg-track] {
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.card-carousel .photo-slide {
+  height: 370px;
+  transform: translateX(
+      calc(
+        var(--wtcg-slide-offset, 0) * -1 * var(--card-width) +
+          sin(calc(var(--wtcg-slide-offset, 0) * 12deg)) * var(--card-radius)
+      )
+    )
+    translateY(calc((1 - cos(calc(var(--wtcg-slide-offset, 0) * 12deg))) * var(--card-drop)))
+    rotate(calc(var(--wtcg-slide-offset, 0) * 7deg))
+    scale(calc(1 - min(var(--wtcg-slide-distance, 0), 4) * var(--card-depth)));
+  opacity: calc(1 - min(var(--wtcg-slide-distance, 0), 4) * 0.12);
+  transition:
+    transform 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 500ms ease;
+}
+.card-carousel[data-wtcg-dragging] [data-wtcg-track],
+.card-carousel[data-wtcg-instant] [data-wtcg-track],
+.card-carousel[data-wtcg-dragging] .photo-slide,
+.card-carousel[data-wtcg-instant] .photo-slide {
+  transition: none;
+}
 .interactive [data-wtcg-list] {
   --wtcg-slides: 2;
   --wtcg-scroll: 2;
@@ -831,6 +898,19 @@ footer {
     height: 360px;
     width: calc(100vw - 40px);
     transform: none;
+  }
+  .fan [data-wtcg-list],
+  .card-carousel [data-wtcg-list] {
+    --wtcg-slides: 1;
+    --wtcg-slide-size: 100cqw;
+    padding-block: 20px 55px;
+  }
+  .fan .photo-slide,
+  .card-carousel .photo-slide {
+    width: calc(100vw - 40px);
+    height: 350px;
+    transform: none;
+    opacity: 1;
   }
   .interactive [data-wtcg-list] {
     --wtcg-slides: 1;
