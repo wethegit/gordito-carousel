@@ -2,22 +2,30 @@
 
 A small vanilla carousel core with an explicit DOM contract. The library owns behavior, runtime state, and measurement. Authors own markup, semantics, layout styling, and animation.
 
-The package entrypoint is `@wethegit/gordito-carousel`. The structural stylesheet is
-available separately from `@wethegit/gordito-carousel/wtc-gordito-carousel.css`.
-
 ## Quick Start
 
-```js
-import { WtcGorditoCarousel } from '@wethegit/gordito-carousel';
-import '@wethegit/gordito-carousel/wtc-gordito-carousel.css';
+```sh
+npm install @wethegit/gordito-carousel
+```
 
-const carousel = new WtcGorditoCarousel(document.querySelector('[data-wtcg-carousel]'), {
-  pagination: true,
-});
+```js
+import { WtcGorditoCarousel } from "@wethegit/gordito-carousel";
+import "@wethegit/gordito-carousel/wtc-gordito-carousel.css";
+
+const carousel = new WtcGorditoCarousel(
+  document.querySelector("[data-wtcg-carousel]"),
+  {
+    pagination: true,
+  },
+);
 ```
 
 ```html
-<section data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">
+<section
+  data-wtcg-carousel
+  aria-roledescription="carousel"
+  aria-label="Featured items"
+>
   <div id="featured-carousel-slides" data-wtcg-list>
     <ul data-wtcg-track>
       <li data-wtcg-slide>First slide</li>
@@ -57,14 +65,18 @@ const carousel = new WtcGorditoCarousel(document.querySelector('[data-wtcg-carou
     </ol>
   </div>
 
-  <p data-wtcg-status aria-live="polite" aria-atomic="true">Slide {current} of {total}</p>
+  <p data-wtcg-status aria-live="polite" aria-atomic="true">
+    Slide {current} of {total}
+  </p>
 </section>
 ```
 
 Options can also be set in markup. Programmatic settings are merged first, then `data-wtcg` overrides them.
 
 ```html
-<section data-wtcg-carousel data-wtcg='{"pagination":true,"drag":"free"}'>...</section>
+<section data-wtcg-carousel data-wtcg='{"pagination":true,"drag":"free"}'>
+  ...
+</section>
 ```
 
 ## Exports
@@ -129,21 +141,6 @@ Arrows can live in the same list as pagination:
 </ol>
 ```
 
-When arrows live inside pagination, style them as normal in-flow controls. The core CSS does not position arrows.
-
-```css
-[data-wtcg-pagination] {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-[data-wtcg-pagination] [data-wtcg-prev],
-[data-wtcg-pagination] [data-wtcg-next] {
-  position: static;
-}
-```
-
 Core behavior for pagination:
 
 - Click or press a pagination button to choose the represented slide.
@@ -157,7 +154,8 @@ Core behavior for pagination:
 
 ```jsx
 <p data-wtcg-status aria-live="polite" aria-atomic="true">
-  Slide {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.CURRENT} of {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.TOTAL}
+  Slide {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.CURRENT} of{" "}
+  {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.TOTAL}
 </p>
 ```
 
@@ -304,43 +302,6 @@ Runtime slide variables written by JavaScript:
 | `[data-wtcg-dragging]`    | Core  | `[data-wtcg-carousel]` | Pointer drag is active on the carousel. Track transform must follow the pointer. **Consumers who override the track transition MUST suppress it under this attribute (see CSS Model section).**                                        |
 | `[data-wtcg-instant]`     | Core  | `[data-wtcg-carousel]` | Track transform must not animate. Set during initial layout, responsive refresh, and infinite-loop clone normalization. **Consumers who override the track transition MUST suppress it under this attribute (see CSS Model section).** |
 
-## Styling Recipes
-
-Full-width slides:
-
-```css
-.my-carousel [data-wtcg-list] {
-  --wtcg-slide-size: 100cqw;
-  overflow: hidden;
-}
-```
-
-Centered live-drag emphasis:
-
-```css
-.my-carousel {
-  --wtcg-center-padding: 2rem;
-}
-
-.carousel [data-wtcg-list] {
-  --wtcg-slides: 3;
-  --wtcg-slide-size: auto;
-}
-
-.carousel [data-wtcg-slide] > * {
-  opacity: calc(1 - min(var(--wtcg-slide-distance, 0), 2) * 0.25);
-  transform: scale(calc(1 - min(var(--wtcg-slide-distance, 0), 2) * 0.1));
-  transition:
-    opacity 240ms ease,
-    transform 240ms ease;
-}
-
-.carousel [data-wtcg-center] > * {
-  opacity: 1;
-  transform: scale(1.08);
-}
-```
-
 ## Infinite Looping
 
 Infinite mode uses a bounded clone loop. The core creates one or more full logical slide sets before and after the original slides, animates onto those clones when crossing an edge, then aligns the track position back to the matching original slide with `[data-wtcg-instant]`.
@@ -368,7 +329,7 @@ new WtcGorditoCarousel(element, {
   focusOnChange: false,
   infinite: true,
   initialSlide: 0,
-  slide: '',
+  slide: "",
   touchThreshold: 5,
   waitForAnimate: true,
 });

@@ -1,34 +1,43 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import { Highlight } from 'prism-react-renderer';
-import { WtcGorditoCarousel, WTC_GORDITO_CAROUSEL_STATUS_TOKENS } from '../src/index.ts';
-import '../src/wtc-gordito-carousel.css';
-import './styles.css';
+import React, { useEffect, useId, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { Highlight } from "prism-react-renderer";
+import {
+  WtcGorditoCarousel,
+  WTC_GORDITO_CAROUSEL_STATUS_TOKENS,
+} from "../src/index.ts";
+import "../src/wtc-gordito-carousel.css";
+import "./styles.css";
 
 const DEMO_IMAGES = [
-  { id: 1015, title: 'Mountain lake', place: 'Dolomites', w: 1200, h: 760 },
-  { id: 1025, title: 'Dog portrait', place: 'At home', w: 900, h: 570 },
-  { id: 1036, title: 'Forest road', place: 'Oregon', w: 1500, h: 950 },
-  { id: 1040, title: 'Sea cliff', place: 'Cornwall', w: 750, h: 475 },
-  { id: 1043, title: 'Open field', place: 'Yorkshire', w: 1350, h: 855 },
-  { id: 1050, title: 'Harbor', place: 'Copenhagen', w: 1050, h: 665 },
-  { id: 1067, title: 'Alpine valley', place: 'Tyrol', w: 1200, h: 760 },
-  { id: 1074, title: 'Desert', place: 'Utah', w: 900, h: 570 },
+  { id: 1015, title: "Mountain lake", place: "Dolomites", w: 1200, h: 760 },
+  { id: 1025, title: "Dog portrait", place: "At home", w: 900, h: 570 },
+  { id: 1036, title: "Forest road", place: "Oregon", w: 1500, h: 950 },
+  { id: 1040, title: "Sea cliff", place: "Cornwall", w: 750, h: 475 },
+  { id: 1043, title: "Open field", place: "Yorkshire", w: 1350, h: 855 },
+  { id: 1050, title: "Harbor", place: "Copenhagen", w: 1050, h: 665 },
+  { id: 1067, title: "Alpine valley", place: "Tyrol", w: 1200, h: 760 },
+  { id: 1074, title: "Desert", place: "Utah", w: 900, h: 570 },
 ];
-const LANDSCAPE_IMAGES = [DEMO_IMAGES[0], DEMO_IMAGES[2], DEMO_IMAGES[4], DEMO_IMAGES[6]];
+const LANDSCAPE_IMAGES = [
+  DEMO_IMAGES[0],
+  DEMO_IMAGES[2],
+  DEMO_IMAGES[4],
+  DEMO_IMAGES[6],
+];
 const FULL_WIDTH_IMAGES = LANDSCAPE_IMAGES;
 const NATURAL_IMAGES = [
-  { id: 1015, title: 'Mountain lake', place: 'Dolomites', w: 1200, h: 760 },
-  { id: 1025, title: 'Dog portrait', place: 'At home', w: 760, h: 1040 },
-  { id: 1036, title: 'Forest road', place: 'Oregon', w: 1320, h: 760 },
-  { id: 1040, title: 'Sea cliff', place: 'Cornwall', w: 820, h: 1040 },
-  { id: 1050, title: 'Harbor', place: 'Copenhagen', w: 980, h: 980 },
+  { id: 1015, title: "Mountain lake", place: "Dolomites", w: 1200, h: 760 },
+  { id: 1025, title: "Dog portrait", place: "At home", w: 760, h: 1040 },
+  { id: 1036, title: "Forest road", place: "Oregon", w: 1320, h: 760 },
+  { id: 1040, title: "Sea cliff", place: "Cornwall", w: 820, h: 1040 },
+  { id: 1050, title: "Harbor", place: "Copenhagen", w: 980, h: 980 },
 ];
-const imageUrl = (image) => `https://picsum.photos/id/${image.id}/${image.w}/${image.h}`;
+const imageUrl = (image) =>
+  `https://picsum.photos/id/${image.id}/${image.w}/${image.h}`;
 const fanOptions = {
   centerMode: true,
   pagination: true,
-  drag: 'free',
+  drag: "free",
   focusOnSelect: true,
   infinite: true,
   initialSlide: 1,
@@ -47,14 +56,14 @@ function CopyButton({ text }) {
   }
   return (
     <button className="copy-button" type="button" onClick={copy}>
-      {copied ? 'Copied' : 'Copy'}
+      {copied ? "Copied" : "Copy"}
     </button>
   );
 }
 const prismLanguage = (language) => {
-  if (language === 'HTML') return 'markup';
-  if (language === 'CSS') return 'css';
-  return 'javascript';
+  if (language === "HTML") return "markup";
+  if (language === "CSS") return "css";
+  return "javascript";
 };
 function CodeBlock({ text, language }) {
   return (
@@ -65,7 +74,10 @@ function CodeBlock({ text, language }) {
             {tokens.map((line, lineIndex) => (
               <div {...getLineProps({ line, key: lineIndex })} key={lineIndex}>
                 {line.map((token, tokenIndex) => (
-                  <span {...getTokenProps({ token, key: tokenIndex })} key={tokenIndex} />
+                  <span
+                    {...getTokenProps({ token, key: tokenIndex })}
+                    key={tokenIndex}
+                  />
                 ))}
               </div>
             ))}
@@ -90,11 +102,11 @@ function Snippet({ label, language, children }) {
 }
 function SourceCode({ markup, styles, script }) {
   const tabs = [
-    ['markup', 'HTML', markup],
-    ['styles', 'CSS', styles],
-    ['script', 'JavaScript', script],
+    ["markup", "HTML", markup],
+    ["styles", "CSS", styles],
+    ["script", "JavaScript", script],
   ];
-  const [active, setActive] = useState('markup');
+  const [active, setActive] = useState("markup");
   const current = tabs.find(([id]) => id === active) || tabs[0];
   return (
     <details className="source-code">
@@ -102,7 +114,11 @@ function SourceCode({ markup, styles, script }) {
         View source code <span aria-hidden="true">＋</span>
       </summary>
       <div className="source-panel">
-        <div className="source-tabs" role="tablist" aria-label="Source code language">
+        <div
+          className="source-tabs"
+          role="tablist"
+          aria-label="Source code language"
+        >
           {tabs.map(([id, label]) => (
             <button
               key={id}
@@ -114,12 +130,12 @@ function SourceCode({ markup, styles, script }) {
               tabIndex={active === id ? 0 : -1}
               onClick={() => setActive(id)}
               onKeyDown={(event) => {
-                if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+                if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
                   event.preventDefault();
                   const next =
                     tabs[
                       (tabs.findIndex(([tabId]) => tabId === active) +
-                        (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) %
+                        (event.key === "ArrowRight" ? 1 : tabs.length - 1)) %
                         tabs.length
                     ];
                   setActive(next[0]);
@@ -159,7 +175,10 @@ function Slide({ image, index, total, interactive = false }) {
       >
         <div>
           <h3>{image.title}</h3>
-          <p>A small pause in the middle of the day. Only the visible story is tabbable.</p>
+          <p>
+            A small pause in the middle of the day. Only the visible story is
+            tabbable.
+          </p>
           <div className="slide-actions">
             <a href="#docs">Read more</a>
             <button type="button">Save slide</button>
@@ -198,8 +217,12 @@ function Controls({ count }) {
       <ol data-wtcg-pagination>
         {Array.from({ length: count }, (_, index) => (
           <li key={index}>
-            <button data-wtcg-page type="button" aria-label={`Slide ${index + 1}`}>
-              {String(index + 1).padStart(2, '0')}
+            <button
+              data-wtcg-page
+              type="button"
+              aria-label={`Slide ${index + 1}`}
+            >
+              {String(index + 1).padStart(2, "0")}
             </button>
           </li>
         ))}
@@ -207,7 +230,13 @@ function Controls({ count }) {
     </div>
   );
 }
-function CarouselStage({ className, options, slides = DEMO_IMAGES, title, children }) {
+function CarouselStage({
+  className,
+  options,
+  slides = DEMO_IMAGES,
+  title,
+  children,
+}) {
   const ref = useRef(null);
   const titleId = useId();
   const listId = useId();
@@ -224,7 +253,9 @@ function CarouselStage({ className, options, slides = DEMO_IMAGES, title, childr
       data-wtcg-carousel
       role="region"
       aria-roledescription="carousel"
-      {...(title ? { 'aria-labelledby': titleId } : { 'aria-label': `${className} carousel` })}
+      {...(title
+        ? { "aria-labelledby": titleId }
+        : { "aria-label": `${className} carousel` })}
       ref={ref}
     >
       {title && (
@@ -240,7 +271,7 @@ function CarouselStage({ className, options, slides = DEMO_IMAGES, title, childr
               image={image}
               index={index}
               total={imageSlides.length}
-              interactive={className === 'interactive'}
+              interactive={className === "interactive"}
             />
           ))}
         </ul>
@@ -264,8 +295,13 @@ function CarouselStage({ className, options, slides = DEMO_IMAGES, title, childr
         →
       </button>
       {options.pagination && <Controls count={imageSlides.length} />}
-      <p className="sr-only" data-wtcg-status aria-live="polite" aria-atomic="true">
-        Slide {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.CURRENT} of{' '}
+      <p
+        className="sr-only"
+        data-wtcg-status
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        Slide {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.CURRENT} of{" "}
         {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.TOTAL}
       </p>
       {children}
@@ -274,12 +310,13 @@ function CarouselStage({ className, options, slides = DEMO_IMAGES, title, childr
 }
 const formatOptions = (options) => {
   const entries = Object.entries(options);
-  if (!entries.length) return 'const carousel = new WtcGorditoCarousel(element);';
-  return `const carousel = new WtcGorditoCarousel(element, {\n${entries.map(([key, value]) => `  ${key}: ${JSON.stringify(value)},`).join('\n')}\n});`;
+  if (!entries.length)
+    return "const carousel = new WtcGorditoCarousel(element);";
+  return `const carousel = new WtcGorditoCarousel(element, {\n${entries.map(([key, value]) => `  ${key}: ${JSON.stringify(value)},`).join("\n")}\n});`;
 };
 const markupFor = (className, count, paginationEnabled = false) => {
   const slide =
-    className === 'interactive'
+    className === "interactive"
       ? `    <li class="story-slide" data-wtcg-slide>
       <div>
         <h3>Slide title</h3>
@@ -301,8 +338,8 @@ const markupFor = (className, count, paginationEnabled = false) => {
     </li>`;
   const pagination =
     paginationEnabled && count > 1
-      ? `\n  <div role="group" aria-label="Choose slide">\n    <ol data-wtcg-pagination>\n${Array.from({ length: Math.min(count, 4) }, (_, index) => `      <li><button data-wtcg-page type="button" aria-label="Slide ${index + 1}">${index + 1}</button></li>`).join('\n')}\n    </ol>\n  </div>`
-      : '';
+      ? `\n  <div role="group" aria-label="Choose slide">\n    <ol data-wtcg-pagination>\n${Array.from({ length: Math.min(count, 4) }, (_, index) => `      <li><button data-wtcg-page type="button" aria-label="Slide ${index + 1}">${index + 1}</button></li>`).join("\n")}\n    </ol>\n  </div>`
+      : "";
   return `<section class="${className}" data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">
   <div data-wtcg-list>
     <ul data-wtcg-track>
@@ -389,7 +426,7 @@ const styleFor = (className) =>
   max-width: 100vw;
   margin-inline-start: calc(50% - 50vw);
 }`,
-    'card-carousel': `.card-carousel {
+    "card-carousel": `.card-carousel {
   --wtcg-slide-gap: 10px;
   --card-width: min(65vw, 20rem);
   --hand-count: 8;
@@ -435,7 +472,7 @@ const styleFor = (className) =>
 .card-carousel[data-wtcg-instant] .photo-slide {
   transition: none;
 }`,
-    'focus-center': `.focus-center {
+    "focus-center": `.focus-center {
   --focus-slide-width: clamp(240px, 31cqw, 380px);
   --focus-gap: 25px;
   --focus-active-scale: 1.1;
@@ -569,39 +606,39 @@ const snippet = (className, options, count = 4) => ({
   count,
 });
 const demos = [
-  { title: 'Basic', className: 'basic', options: {}, slides: LANDSCAPE_IMAGES },
+  { title: "Basic", className: "basic", options: {}, slides: LANDSCAPE_IMAGES },
   {
-    title: 'Different image sizes',
-    className: 'natural',
+    title: "Different image sizes",
+    className: "natural",
     options: {
       centerMode: true,
-      drag: 'free',
+      drag: "free",
       focusOnSelect: true,
       initialSlide: 2,
     },
     slides: NATURAL_IMAGES,
   },
   {
-    title: 'Responsive slide count',
-    className: 'responsive',
+    title: "Responsive slide count",
+    className: "responsive",
     options: { pagination: true, infinite: false },
     slides: DEMO_IMAGES,
   },
   {
-    title: 'Viewport-width carousel',
-    className: 'viewport',
+    title: "Viewport-width carousel",
+    className: "viewport",
     options: { pagination: true, infinite: true },
     slides: FULL_WIDTH_IMAGES,
   },
   {
-    title: 'A stacked card carousel',
-    className: 'card-carousel',
+    title: "A stacked card carousel",
+    className: "card-carousel",
     options: fanOptions,
     slides: LANDSCAPE_IMAGES,
   },
   {
-    title: 'Centered focus',
-    className: 'focus-center',
+    title: "Centered focus",
+    className: "focus-center",
     options: {
       centerMode: true,
       pagination: true,
@@ -611,8 +648,8 @@ const demos = [
     slides: LANDSCAPE_IMAGES,
   },
   {
-    title: 'Interactive slide content',
-    className: 'interactive',
+    title: "Interactive slide content",
+    className: "interactive",
     options: { pagination: true, infinite: true },
     slides: DEMO_IMAGES.slice(0, 5),
   },
@@ -631,22 +668,35 @@ function Demo({ item }) {
         slides={Array.isArray(slides) ? slides : DEMO_IMAGES}
         title={title}
       />
-      <SourceCode markup={code.markup} styles={code.styles} script={code.script} />
+      <SourceCode
+        markup={code.markup}
+        styles={code.styles}
+        script={code.script}
+      />
     </article>
   );
 }
 function FeatureFan() {
-  const code = snippet('fan', fanOptions, LANDSCAPE_IMAGES.length);
+  const code = snippet("fan", fanOptions, LANDSCAPE_IMAGES.length);
   return (
     <section className="feature-fan" aria-label="Featured live demo">
-      <CarouselStage className="fan" options={fanOptions} slides={LANDSCAPE_IMAGES} />
-      <SourceCode markup={code.markup} styles={code.styles} script={code.script} />
+      <CarouselStage
+        className="fan"
+        options={fanOptions}
+        slides={LANDSCAPE_IMAGES}
+      />
+      <SourceCode
+        markup={code.markup}
+        styles={code.styles}
+        script={code.script}
+      />
     </section>
   );
 }
 
 const quickMarkup = `<section data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">\n  <div id="featured-carousel-slides" data-wtcg-list>\n    <ul data-wtcg-track>\n      <li data-wtcg-slide>First slide</li>\n      <li data-wtcg-slide>Second slide</li>\n      <li data-wtcg-slide>Third slide</li>\n    </ul>\n  </div>\n  <button data-wtcg-prev type="button">Previous</button>\n</section>`;
 const quickJs = `import { WtcGorditoCarousel } from '@wethegit/gordito-carousel';\nimport '@wethegit/gordito-carousel/wtc-gordito-carousel.css';\n\nconst carousel = new WtcGorditoCarousel(document.querySelector('[data-wtcg-carousel]'), {\n  pagination: true,\n});`;
+const installCommand = `npm install @wethegit/gordito-carousel`;
 const suppressCss = `.my-carousel {\n  [data-wtcg-track] { transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1); }\n\n  /* MANDATORY — suppress track transform during instant corrections */\n  &[data-wtcg-instant] [data-wtcg-track],\n  /* MANDATORY — suppress track transform during pointer drag */\n  &[data-wtcg-dragging] [data-wtcg-track] { transition: none; }\n}`;
 function Table({ headers, rows }) {
   return (
@@ -664,8 +714,9 @@ function Table({ headers, rows }) {
             <tr key={i}>
               {row.map((cell, j) => (
                 <td key={j}>
-                  {typeof cell === 'string' && (cell.startsWith('`') || cell.includes('wtcg')) ? (
-                    <code>{cell.replaceAll('`', '')}</code>
+                  {typeof cell === "string" &&
+                  (cell.startsWith("`") || cell.includes("wtcg")) ? (
+                    <code>{cell.replaceAll("`", "")}</code>
                   ) : (
                     cell
                   )}
@@ -695,22 +746,19 @@ function Docs() {
       </aside>
       <div className="docs-body">
         <section id="quick-start">
-          <p className="kicker">Install / quick start</p>
-          <h2>Start with the contract.</h2>
-          <p>
-            The package entrypoint is <code>@wethegit/gordito-carousel</code>. The structural
-            stylesheet is available separately from{' '}
-            <code>@wethegit/gordito-carousel/wtc-gordito-carousel.css</code>.
-          </p>
-          <Snippet label="Quick start" language="JS">
-            {quickJs}
+          <h2>Quick start</h2>
+          <Snippet label="Install" language="SH">
+            {installCommand}
           </Snippet>
           <Snippet label="Required markup" language="HTML">
             {quickMarkup}
           </Snippet>
+          <Snippet label="Start" language="JS">
+            {quickJs}
+          </Snippet>
           <p>
-            Options can also be set in markup. Programmatic settings are merged first, then{' '}
-            <code>data-wtcg</code> overrides them.
+            Options can also be set in markup. Programmatic settings are merged
+            first, then <code>data-wtcg</code> overrides them.
           </p>
           <Snippet label="Markup options" language="HTML">
             {
@@ -722,14 +770,18 @@ function Docs() {
           <p className="kicker">Public API</p>
           <h2>Exports</h2>
           <Table
-            headers={['Export', 'Purpose']}
+            headers={["Export", "Purpose"]}
             rows={[
-              [<code>WtcGorditoCarousel</code>, 'Carousel class.'],
-              [<code>WTC_GORDITO_CAROUSEL_DEFAULTS</code>, 'Default option object.'],
+              [<code>WtcGorditoCarousel</code>, "Carousel class."],
+              [
+                <code>WTC_GORDITO_CAROUSEL_DEFAULTS</code>,
+                "Default option object.",
+              ],
               [
                 <code>WTC_GORDITO_CAROUSEL_STATUS_TOKENS</code>,
                 <>
-                  <code>{'{current}'}</code> and <code>{'{total}'}</code> status template tokens.
+                  <code>{"{current}"}</code> and <code>{"{total}"}</code> status
+                  template tokens.
                 </>,
               ],
             ]}
@@ -739,9 +791,10 @@ function Docs() {
           <p className="kicker">DOM contract</p>
           <h2>Keep the DOM yours.</h2>
           <p>
-            The core never creates wrappers, arrows, pagination, or status markup. If optional
-            controls exist and their corresponding option is enabled, the core wires behavior. If
-            controls are missing, it does nothing.
+            The core never creates wrappers, arrows, pagination, or status
+            markup. If optional controls exist and their corresponding option is
+            enabled, the core wires behavior. If controls are missing, it does
+            nothing.
           </p>
           <h3>Required elements</h3>
           <ul>
@@ -755,8 +808,8 @@ function Docs() {
               <code>[data-wtcg-track]</code>: Moving track element.
             </li>
             <li>
-              <code>[data-wtcg-slide]</code>: Slide element. Direct children of the track are
-              treated as slides by default.
+              <code>[data-wtcg-slide]</code>: Slide element. Direct children of
+              the track are treated as slides by default.
             </li>
           </ul>
           <h3>Optional controls</h3>
@@ -768,25 +821,29 @@ function Docs() {
               <code>[data-wtcg-next]</code>: Next control.
             </li>
             <li>
-              <code>[data-wtcg-pagination] &gt; * &gt; [data-wtcg-page]</code>: Pagination controls.
+              <code>[data-wtcg-pagination] &gt; * &gt; [data-wtcg-page]</code>:
+              Pagination controls.
             </li>
             <li>
-              <code>[data-wtcg-status]</code>: Status template for current/total text.
+              <code>[data-wtcg-status]</code>: Status template for current/total
+              text.
             </li>
           </ul>
           <h3>Controls</h3>
           <p>
-            Arrows are attach-only controls. Keep <code>arrows</code> enabled when you provide arrow
-            markup; <code>arrows: false</code> disables arrow behavior. Pagination buttons choose
-            slides; the active button receives <code>[data-wtcg-active]</code> and{' '}
-            <code>aria-current="true"</code>. Extra buttons use native <code>hidden</code> when
-            fewer positions are reachable.
+            Arrows are attach-only controls. Keep <code>arrows</code> enabled
+            when you provide arrow markup; <code>arrows: false</code> disables
+            arrow behavior. Pagination buttons choose slides; the active button
+            receives <code>[data-wtcg-active]</code> and{" "}
+            <code>aria-current="true"</code>. Extra buttons use native{" "}
+            <code>hidden</code> when fewer positions are reachable.
           </p>
           <h3>Status</h3>
           <p>
-            <code>[data-wtcg-status]</code> is an optional template. The author owns live-region
-            semantics and localization; tokens are replaced with the current logical slide number
-            and total logical slide count. Infinite clones are not counted.
+            <code>[data-wtcg-status]</code> is an optional template. The author
+            owns live-region semantics and localization; tokens are replaced
+            with the current logical slide number and total logical slide count.
+            Infinite clones are not counted.
           </p>
         </section>
         <section id="accessibility">
@@ -795,7 +852,7 @@ function Docs() {
           <h3>Author responsibilities</h3>
           <ul>
             <li>
-              Give the root an accessible name with <code>aria-label</code> or{' '}
+              Give the root an accessible name with <code>aria-label</code> or{" "}
               <code>aria-labelledby</code>.
             </li>
             <li>
@@ -804,31 +861,35 @@ function Docs() {
             <li>Use native buttons and give controls accessible names.</li>
             <li>Give slides useful accessible names where possible.</li>
             <li>
-              Add <code>aria-live="polite"</code> to a dedicated status element when announcements
-              are useful.
+              Add <code>aria-live="polite"</code> to a dedicated status element
+              when announcements are useful.
             </li>
           </ul>
           <h3>Core behavior</h3>
           <ul>
             <li>
-              Slides outside the active rendered range are <code>inert</code> and{' '}
-              <code>aria-hidden="true"</code>.
+              Slides outside the active rendered range are <code>inert</code>{" "}
+              and <code>aria-hidden="true"</code>.
             </li>
             <li>
               Active rendered slides receive <code>aria-hidden="false"</code>.
             </li>
-            <li>During pointer drag, rendered slide state follows the drag preview.</li>
             <li>
-              Pagination, status, events, and committed <code>currentSlide</code> update after
-              release.
+              During pointer drag, rendered slide state follows the drag
+              preview.
             </li>
             <li>
-              Pagination exposes <code>aria-current="true"</code>; previous and next expose native{' '}
-              <code>disabled</code> and <code>aria-disabled</code>.
+              Pagination, status, events, and committed{" "}
+              <code>currentSlide</code> update after release.
             </li>
             <li>
-              Static roles, labels, roledescriptions, and control relationships remain author
-              markup.
+              Pagination exposes <code>aria-current="true"</code>; previous and
+              next expose native <code>disabled</code> and{" "}
+              <code>aria-disabled</code>.
+            </li>
+            <li>
+              Static roles, labels, roledescriptions, and control relationships
+              remain author markup.
             </li>
           </ul>
         </section>
@@ -836,49 +897,53 @@ function Docs() {
           <p className="kicker">CSS model / advanced styling</p>
           <h2>CSS owns the animation.</h2>
           <p>
-            Library CSS is structural, uses low-specificity <code>:where([data-wtcg-*])</code>{' '}
-            selectors inside <code>@layer wtc-gordito-carousel</code>, and can be overridden by
+            Library CSS is structural, uses low-specificity{" "}
+            <code>:where([data-wtcg-*])</code> selectors inside{" "}
+            <code>@layer wtc-gordito-carousel</code>, and can be overridden by
             ordinary app CSS.
           </p>
           <Snippet label="Basic transition" language="CSS">
             {
-              '[data-wtcg-track] { transition: transform 400ms ease; }\n[data-wtcg-carousel][data-wtcg-instant] [data-wtcg-track],\n[data-wtcg-carousel][data-wtcg-dragging] [data-wtcg-track] { transition: none; }\n@media (prefers-reduced-motion: reduce) { [data-wtcg-track] { transition: none; } }'
+              "[data-wtcg-track] { transition: transform 400ms ease; }\n[data-wtcg-carousel][data-wtcg-instant] [data-wtcg-track],\n[data-wtcg-carousel][data-wtcg-dragging] [data-wtcg-track] { transition: none; }\n@media (prefers-reduced-motion: reduce) { [data-wtcg-track] { transition: none; } }"
             }
           </Snippet>
           <h3>Two suppression states</h3>
           <Table
-            headers={['Attribute', 'Element', 'When set']}
+            headers={["Attribute", "Element", "When set"]}
             rows={[
               [
                 <code>[data-wtcg-instant]</code>,
-                'Carousel root',
-                'Invisible position corrections: initial layout, responsive refresh, and infinite-loop clone normalization.',
+                "Carousel root",
+                "Invisible position corrections: initial layout, responsive refresh, and infinite-loop clone normalization.",
               ],
               [
                 <code>[data-wtcg-dragging]</code>,
-                'Carousel root',
-                'Active pointer drag — the track must follow the pointer, not animate.',
+                "Carousel root",
+                "Active pointer drag — the track must follow the pointer, not animate.",
               ],
             ]}
           />
           <p>
-            <strong>Neither attribute should affect slide-level transitions</strong> such as opacity
-            and scale.
+            <strong>
+              Neither attribute should affect slide-level transitions
+            </strong>{" "}
+            such as opacity and scale.
           </p>
           <h3>Mandatory suppression rules</h3>
           <p className="warning">
-            ⚠ If you override the track transition, you MUST also restore both suppression rules.
-            Otherwise the carousel can jank during drag and visible clone corrections. Consumer CSS
-            with non-zero specificity or unlayered CSS can override them accidentally.
+            ⚠ If you override the track transition, you MUST also restore both
+            suppression rules. Otherwise the carousel can jank during drag and
+            visible clone corrections. Consumer CSS with non-zero specificity or
+            unlayered CSS can override them accidentally.
           </p>
           <Snippet label="Required override" language="CSS">
             {suppressCss}
           </Snippet>
           <h3 id="responsive">Responsive behavior</h3>
           <p>
-            Responsive behavior is CSS-first. Change custom properties with media queries or
-            container queries; the core watches size changes and recalculates from rendered DOM
-            layout.
+            Responsive behavior is CSS-first. Change custom properties with
+            media queries or container queries; the core watches size changes
+            and recalculates from rendered DOM layout.
           </p>
           <Snippet
             label="Container query"
@@ -889,61 +954,83 @@ function Docs() {
           <p className="kicker">Layout vocabulary</p>
           <h2>CSS variables</h2>
           <Table
-            headers={['Variable', 'Purpose', 'Default']}
+            headers={["Variable", "Purpose", "Default"]}
             rows={[
-              [<code>--wtcg-slides</code>, 'Number of slides treated as visible/active.', '1'],
-              [<code>--wtcg-scroll</code>, 'Slides advanced by arrows and fixed drag.', '1'],
+              [
+                <code>--wtcg-slides</code>,
+                "Number of slides treated as visible/active.",
+                "1",
+              ],
+              [
+                <code>--wtcg-scroll</code>,
+                "Slides advanced by arrows and fixed drag.",
+                "1",
+              ],
               [
                 <code>--wtcg-slide-size</code>,
-                'Width applied to each slide; core measures rendered boxes.',
-                'auto',
+                "Width applied to each slide; core measures rendered boxes.",
+                "auto",
               ],
-              [<code>--wtcg-slide-gap</code>, 'Track gap between adjacent slide boxes.', '0px'],
-              [<code>--wtcg-center-padding</code>, 'List inline padding in center mode.', '0px'],
-              [<code>--wtcg-pagination-gap</code>, 'Gap between pagination controls.', '0.5rem'],
+              [
+                <code>--wtcg-slide-gap</code>,
+                "Track gap between adjacent slide boxes.",
+                "0px",
+              ],
+              [
+                <code>--wtcg-center-padding</code>,
+                "List inline padding in center mode.",
+                "0px",
+              ],
+              [
+                <code>--wtcg-pagination-gap</code>,
+                "Gap between pagination controls.",
+                "0.5rem",
+              ],
             ]}
           />
           <h3>Runtime slide variables</h3>
           <Table
-            headers={['Variable', 'Purpose']}
+            headers={["Variable", "Purpose"]}
             rows={[
               [
                 <code>--wtcg-slide-index</code>,
-                'Original slide index, normalized to original count.',
+                "Original slide index, normalized to original count.",
               ],
-              [<code>--wtcg-slide-render-index</code>, 'Rendered index including clones.'],
+              [
+                <code>--wtcg-slide-render-index</code>,
+                "Rendered index including clones.",
+              ],
               [
                 <code>--wtcg-slide-offset</code>,
-                'Signed distance from active rendered slide; fractional during drag.',
+                "Signed distance from active rendered slide; fractional during drag.",
               ],
-              [<code>--wtcg-slide-distance</code>, 'Absolute distance; fractional during drag.'],
-              [<code>--wtcg-slide-side</code>, 'Direction: -1, 0, or 1.'],
+              [
+                <code>--wtcg-slide-distance</code>,
+                "Absolute distance; fractional during drag.",
+              ],
+              [<code>--wtcg-slide-side</code>, "Direction: -1, 0, or 1."],
             ]}
           />
           <h3>State attributes</h3>
           <p>
-            <code>data-wtcg-initialized</code>, <code>data-wtcg-active</code>,{' '}
-            <code>data-wtcg-current</code>, <code>data-wtcg-center</code>,{' '}
-            <code>data-wtcg-draggable</code>, <code>data-wtcg-dragging</code>, and{' '}
-            <code>data-wtcg-instant</code> are core-owned state. They describe initialization,
-            visible/current slides, center mode, drag capability, active drag, and non-animated
-            transforms.
+            <code>data-wtcg-initialized</code>, <code>data-wtcg-active</code>,{" "}
+            <code>data-wtcg-current</code>, <code>data-wtcg-center</code>,{" "}
+            <code>data-wtcg-draggable</code>, <code>data-wtcg-dragging</code>,
+            and <code>data-wtcg-instant</code> are core-owned state. They
+            describe initialization, visible/current slides, center mode, drag
+            capability, active drag, and non-animated transforms.
           </p>
-          <h3>Styling recipes</h3>
-          <Snippet
-            label="Centered live-drag emphasis"
-            language="CSS"
-          >{`.carousel [data-wtcg-list] { --wtcg-slides: 3; --wtcg-slide-size: auto; }\n.carousel [data-wtcg-slide] > * { opacity: calc(1 - min(var(--wtcg-slide-distance, 0), 2) * .25); transform: scale(calc(1 - min(var(--wtcg-slide-distance, 0), 2) * .1)); transition: opacity 240ms ease, transform 240ms ease; }\n.carousel [data-wtcg-center] > * { opacity: 1; transform: scale(1.08); }`}</Snippet>
         </section>
         <section id="infinite">
           <p className="kicker">Infinite looping</p>
           <h2>Bounded clone loops.</h2>
           <p>
-            Infinite mode creates one or more full logical slide sets before and after the
-            originals, animates across an edge, then aligns back with{' '}
-            <code>[data-wtcg-instant]</code>. DOM growth is bounded, original order is preserved,
-            repeated order stays consistent, and variable-width slides remain measurable. Inactive
-            duplicate rendered slides stay <code>aria-hidden</code> and <code>inert</code>; status
+            Infinite mode creates one or more full logical slide sets before and
+            after the originals, animates across an edge, then aligns back with{" "}
+            <code>[data-wtcg-instant]</code>. DOM growth is bounded, original
+            order is preserved, repeated order stays consistent, and
+            variable-width slides remain measurable. Inactive duplicate rendered
+            slides stay <code>aria-hidden</code> and <code>inert</code>; status
             and pagination use original logical indexes.
           </p>
         </section>
@@ -955,49 +1042,73 @@ function Docs() {
             language="JS"
           >{`new WtcGorditoCarousel(element, {\n  adaptiveHeight: false, arrows: true, centerMode: false, pagination: false,\n  drag: true, edgeFriction: 0.35, focusOnSelect: false, focusOnChange: false,\n  infinite: true, initialSlide: 0, slide: '', touchThreshold: 5, waitForAnimate: true,\n});`}</Snippet>
           <Table
-            headers={['Option', 'Type', 'Description']}
+            headers={["Option", "Type", "Description"]}
             rows={[
               [
                 <code>adaptiveHeight</code>,
-                'boolean',
-                'When slides resolves to 1, match list height to current slide.',
+                "boolean",
+                "When slides resolves to 1, match list height to current slide.",
               ],
               [
                 <code>arrows</code>,
-                'boolean | string | HTMLElement',
-                'Attach existing previous/next controls; true searches the root.',
+                "boolean | string | HTMLElement",
+                "Attach existing previous/next controls; true searches the root.",
               ],
               [
                 <code>centerMode</code>,
-                'boolean',
-                'Center current slide and allow partial neighbors.',
+                "boolean",
+                "Center current slide and allow partial neighbors.",
               ],
               [
                 <code>pagination</code>,
-                'boolean | string | HTMLElement',
-                'Attach existing pagination controls.',
+                "boolean | string | HTMLElement",
+                "Attach existing pagination controls.",
               ],
               [
                 <code>drag</code>,
                 'boolean | "fixed" | "free"',
-                'Disable drag, advance fixed, or snap to nearest reached slide.',
+                "Disable drag, advance fixed, or snap to nearest reached slide.",
               ],
-              [<code>edgeFriction</code>, 'number', 'Dampening past a non-infinite edge.'],
-              [<code>focusOnSelect</code>, 'boolean', 'Clicking a slide moves it current.'],
+              [
+                <code>edgeFriction</code>,
+                "number",
+                "Dampening past a non-infinite edge.",
+              ],
+              [
+                <code>focusOnSelect</code>,
+                "boolean",
+                "Clicking a slide moves it current.",
+              ],
               [
                 <code>focusOnChange</code>,
-                'boolean',
-                'Move browser focus after each change; use carefully.',
+                "boolean",
+                "Move browser focus after each change; use carefully.",
               ],
-              [<code>infinite</code>, 'boolean', 'Clone edge slides so movement wraps.'],
-              [<code>initialSlide</code>, 'number', 'Zero-based initial original index.'],
-              [<code>slide</code>, 'string', 'Selector narrowing participating direct slides.'],
+              [
+                <code>infinite</code>,
+                "boolean",
+                "Clone edge slides so movement wraps.",
+              ],
+              [
+                <code>initialSlide</code>,
+                "number",
+                "Zero-based initial original index.",
+              ],
+              [
+                <code>slide</code>,
+                "string",
+                "Selector narrowing participating direct slides.",
+              ],
               [
                 <code>touchThreshold</code>,
-                'number',
-                'Swipe threshold fraction; 5 means one-fifth width.',
+                "number",
+                "Swipe threshold fraction; 5 means one-fifth width.",
               ],
-              [<code>waitForAnimate</code>, 'boolean', 'Ignore requests during a transition.'],
+              [
+                <code>waitForAnimate</code>,
+                "boolean",
+                "Ignore requests during a transition.",
+              ],
             ]}
           />
         </section>
@@ -1005,29 +1116,50 @@ function Docs() {
           <p className="kicker">Imperative API</p>
           <h2>Methods & accessors</h2>
           <Table
-            headers={['Method', 'Description']}
+            headers={["Method", "Description"]}
             rows={[
-              [<code>next(event?)</code>, 'Advance by --wtcg-scroll.'],
-              [<code>prev(event?)</code>, 'Move backward by --wtcg-scroll.'],
-              [<code>goTo(index, dontAnimate = false)</code>, 'Move to an original slide index.'],
-              [<code>getOption(option)</code>, 'Return a runtime option.'],
-              [<code>setOption(option, value, refresh = false)</code>, 'Update one option.'],
-              [<code>setOption(options, refresh = false)</code>, 'Update multiple options.'],
-              [<code>refresh(initializing = false)</code>, 'Rebuild from current DOM and options.'],
+              [<code>next(event?)</code>, "Advance by --wtcg-scroll."],
+              [<code>prev(event?)</code>, "Move backward by --wtcg-scroll."],
+              [
+                <code>goTo(index, dontAnimate = false)</code>,
+                "Move to an original slide index.",
+              ],
+              [<code>getOption(option)</code>, "Return a runtime option."],
+              [
+                <code>setOption(option, value, refresh = false)</code>,
+                "Update one option.",
+              ],
+              [
+                <code>setOption(options, refresh = false)</code>,
+                "Update multiple options.",
+              ],
+              [
+                <code>refresh(initializing = false)</code>,
+                "Rebuild from current DOM and options.",
+              ],
               [
                 <code>destroy(refresh = false)</code>,
-                'Remove clones/listeners/state and restore originals.',
+                "Remove clones/listeners/state and restore originals.",
               ],
-              [<code>addSlide(markup, index?, addBefore?)</code>, 'Add one slide and rebuild.'],
+              [
+                <code>addSlide(markup, index?, addBefore?)</code>,
+                "Add one slide and rebuild.",
+              ],
               [
                 <code>removeSlide(index, removeBefore?, removeAll?)</code>,
-                'Remove one or all slides and rebuild.',
+                "Remove one or all slides and rebuild.",
               ],
-              [<code>filterSlides(filter)</code>, 'Filter by selector or predicate and rebuild.'],
-              [<code>unfilterSlides()</code>, 'Clear active filter and rebuild.'],
+              [
+                <code>filterSlides(filter)</code>,
+                "Filter by selector or predicate and rebuild.",
+              ],
+              [
+                <code>unfilterSlides()</code>,
+                "Clear active filter and rebuild.",
+              ],
               [
                 <code>WtcGorditoCarousel.initAll(selector?, options?)</code>,
-                'Initialize all matching elements.',
+                "Initialize all matching elements.",
               ],
             ]}
           />
@@ -1040,19 +1172,22 @@ function Docs() {
           <p className="kicker">Events</p>
           <h2>Listen at the root.</h2>
           <p>
-            Events are bubbling <code>CustomEvent</code>s dispatched on the carousel root with the{' '}
-            <code>wtcg:</code> prefix.
+            Events are bubbling <code>CustomEvent</code>s dispatched on the
+            carousel root with the <code>wtcg:</code> prefix.
           </p>
           <Table
-            headers={['Event', 'Detail']}
+            headers={["Event", "Detail"]}
             rows={[
-              [<code>wtcg:init</code>, '{ carousel }'],
-              [<code>wtcg:beforeChange</code>, '{ carousel, currentSlide, nextSlide }'],
-              [<code>wtcg:afterChange</code>, '{ carousel, currentSlide }'],
-              [<code>wtcg:reInit</code>, '{ carousel }'],
-              [<code>wtcg:setPosition</code>, '{ carousel }'],
-              [<code>wtcg:swipe</code>, '{ carousel, direction }'],
-              [<code>wtcg:destroy</code>, '{ carousel, refresh }'],
+              [<code>wtcg:init</code>, "{ carousel }"],
+              [
+                <code>wtcg:beforeChange</code>,
+                "{ carousel, currentSlide, nextSlide }",
+              ],
+              [<code>wtcg:afterChange</code>, "{ carousel, currentSlide }"],
+              [<code>wtcg:reInit</code>, "{ carousel }"],
+              [<code>wtcg:setPosition</code>, "{ carousel }"],
+              [<code>wtcg:swipe</code>, "{ carousel, direction }"],
+              [<code>wtcg:destroy</code>, "{ carousel, refresh }"],
             ]}
           />
         </section>
@@ -1072,7 +1207,10 @@ function App() {
           <a href="#demos">Demos</a>
           <a href="#docs">Docs</a>
           <a href="#contract">DOM contract</a>
-          <a className="github" href="https://github.com/wethegit/gordito-carousel">
+          <a
+            className="github"
+            href="https://github.com/wethegit/gordito-carousel"
+          >
             GitHub ↗
           </a>
         </nav>
@@ -1083,9 +1221,9 @@ function App() {
             WTC Gordito Carousel <span>🐽</span>
           </h1>
           <p>
-            A small vanilla carousel core with an explicit DOM contract. The library owns behavior,
-            runtime state, and measurement. Authors own markup, semantics, layout styling, and
-            animation.
+            A small vanilla carousel core with an explicit DOM contract. The
+            library owns behavior, runtime state, and measurement. Authors own
+            markup, semantics, layout styling, and animation.
           </p>
         </section>
         <FeatureFan />
@@ -1116,4 +1254,4 @@ function App() {
     </>
   );
 }
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById("root")).render(<App />);
