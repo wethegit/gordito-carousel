@@ -24,34 +24,6 @@ export type WtcGorditoCarouselOptionValue = Exclude<
   undefined
 >;
 
-type RuntimeOptions = Required<WtcGorditoCarouselOptions> & Record<string, unknown>;
-
-function isHTMLElement(element: Node): element is HTMLElement {
-  return element instanceof HTMLElement;
-}
-
-function cloneHTMLElement(element: HTMLElement): HTMLElement {
-  const clone = element.cloneNode(true);
-  if (!isHTMLElement(clone)) {
-    throw new Error('WtcGorditoCarousel can only clone HTMLElement slides.');
-  }
-  return clone;
-}
-
-function closestHTMLElement(element: Element, selector: string): HTMLElement | null {
-  const match = element.closest(selector);
-  return match instanceof HTMLElement ? match : null;
-}
-
-function getQueryableTarget(
-  target: HTMLElement | Window | Document,
-  fallback: HTMLElement,
-): HTMLElement | Document {
-  if (target instanceof HTMLElement) return target;
-  if (target === document) return document;
-  return fallback;
-}
-
 type BoundHandlers = {
   next: (event?: Event) => void;
   prev: (event?: Event) => void;
@@ -63,64 +35,6 @@ type BoundHandlers = {
   handleMediaLoad: (event: Event) => void;
   handleClick: (event: MouseEvent) => void;
 };
-
-type PositionTransaction = {
-  generation: number;
-  kind: 'navigation' | 'layout';
-  rafIds: Set<number>;
-  timer: number | null;
-  cleanup: () => void;
-};
-
-function parseCssTime(value: string): number {
-  const normalized = value.trim().toLowerCase();
-  const amount = Number.parseFloat(normalized);
-  if (!Number.isFinite(amount)) return 0;
-  if (normalized.endsWith('ms')) return amount;
-  if (normalized.endsWith('s')) return amount * 1000;
-  return 0;
-}
-
-function parseTranslateX(transform: string): number | null {
-  if (!transform || transform === 'none') return null;
-
-  if (typeof DOMMatrixReadOnly !== 'undefined') {
-    try {
-      const matrix = new DOMMatrixReadOnly(transform);
-      return Number.isFinite(matrix.m41) ? matrix.m41 : null;
-    } catch {
-      // Fall through to the small parser for test doubles and older browsers.
-    }
-  }
-
-  const matrix3d = transform.match(/^matrix3d\(([^)]+)\)$/i);
-  if (matrix3d) {
-    const rawValues = matrix3d[1];
-    if (!rawValues) return null;
-    const values = rawValues.split(',').map(Number);
-    const value = values[12];
-    return value !== undefined && Number.isFinite(value) ? value : null;
-  }
-
-  const matrix = transform.match(/^matrix\(([^)]+)\)$/i);
-  if (matrix) {
-    const rawValues = matrix[1];
-    if (!rawValues) return null;
-    const values = rawValues.split(',').map(Number);
-    const value = values[4];
-    return value !== undefined && Number.isFinite(value) ? value : null;
-  }
-
-  const translate = transform.match(/^translate(?:3d|x)?\(\s*(-?[\d.]+)(?:px)?/i);
-  if (translate) {
-    const rawValue = translate[1];
-    if (!rawValue) return null;
-    const value = Number.parseFloat(rawValue);
-    return Number.isFinite(value) ? value : null;
-  }
-
-  return null;
-}
 
 /**
  * Default options for {@link WtcGorditoCarousel}.
@@ -191,35 +105,30 @@ export const WTC_GORDITO_CAROUSEL_STATUS_TOKENS = {
  * }
  */
 export class WtcGorditoCarousel {
-  slider: HTMLElement;
-  defaults: Required<WtcGorditoCarouselOptions>;
-  originalSettings: RuntimeOptions;
-  options: RuntimeOptions;
-  enabled: boolean;
-  animating: boolean;
-  dragging: boolean;
-  currentSlide: number;
-  trackIndex: number;
-  slideCount: number;
-  slideSize: number;
-  slideSizes: number[];
-  listSize: number;
-  listContentSize: number;
-  trackGap: number;
-  _cloneCount: number;
-  positionOffset: number | null;
-  positionGeneration: number;
-  positionTransaction: PositionTransaction | null;
-  navigationCallbackActive: boolean;
-  pendingLayout: boolean;
-  pendingLayoutRefresh: boolean;
-  previewTrackIndex: number | null;
-  previewPosition: number | null;
-  renderedSlides: number;
-  renderedScroll: number;
-  windowTimer: number | null;
-  resizeObserver: ResizeObserver | null;
-  pointer: {
+  declare slider: HTMLElement;
+  declare defaults: Required<WtcGorditoCarouselOptions>;
+  declare originalSettings: Required<WtcGorditoCarouselOptions>;
+  declare options: Required<WtcGorditoCarouselOptions>;
+  declare enabled: boolean;
+  declare animating: boolean;
+  declare dragging: boolean;
+  declare currentSlide: number;
+  declare trackIndex: number;
+  declare slideCount: number;
+  declare slideSize: number;
+  declare slideSizes: number[];
+  declare listSize: number;
+  declare listContentSize: number;
+  declare trackGap: number;
+  declare _cloneCount: number;
+  declare positionOffset: number | null;
+  declare previewTrackIndex: number | null;
+  declare previewPosition: number | null;
+  declare renderedSlides: number;
+  declare renderedScroll: number;
+  declare windowTimer: number | null;
+  declare resizeObserver: ResizeObserver | null;
+  declare pointer: {
     id: number;
     startX: number;
     startY: number;
@@ -229,20 +138,20 @@ export class WtcGorditoCarousel {
     currentOffset: number;
     moved: boolean;
   } | null;
-  pointerDownSlide: HTMLElement | null;
-  pointerDownSlideTimer: number | null;
-  shouldSuppressClick: boolean;
-  eventController: AbortController | null;
-  bound!: BoundHandlers;
-  originalSlides: HTMLElement[];
-  filteredSlides: HTMLElement[] | null;
-  list!: HTMLElement;
-  track!: HTMLElement;
-  prevArrow: HTMLButtonElement | null = null;
-  nextArrow: HTMLButtonElement | null = null;
-  pagination: HTMLElement | null;
-  status: HTMLElement | null;
-  statusTemplate: string;
+  declare pointerDownSlide: HTMLElement | null;
+  declare pointerDownSlideTimer: number | null;
+  declare shouldSuppressClick: boolean;
+  declare eventController: AbortController | null;
+  declare bound: BoundHandlers;
+  declare originalSlides: HTMLElement[];
+  declare filteredSlides: HTMLElement[] | null;
+  declare list: HTMLElement;
+  declare track: HTMLElement;
+  declare prevArrow: HTMLButtonElement | null;
+  declare nextArrow: HTMLButtonElement | null;
+  declare pagination: HTMLElement | null;
+  declare status: HTMLElement | null;
+  declare statusTemplate: string;
 
   /**
    * Creates and initializes a carousel.
@@ -255,10 +164,10 @@ export class WtcGorditoCarousel {
    * @throws {Error} When `element` cannot be resolved to an element.
    */
   constructor(element: string | HTMLElement, settings: Partial<WtcGorditoCarouselOptions> = {}) {
-    const slider =
-      typeof element === 'string' ? document.querySelector<HTMLElement>(element) : element;
-    if (!slider) throw new Error('WtcGorditoCarousel requires a valid element.');
-    this.slider = slider;
+    this.slider = (
+      typeof element === 'string' ? document.querySelector<HTMLElement>(element) : element
+    ) as HTMLElement;
+    if (!this.slider) throw new Error('WtcGorditoCarousel requires a valid element.');
 
     const dataSettings = this.readDataSettings();
     this.defaults = WTC_GORDITO_CAROUSEL_DEFAULTS;
@@ -277,11 +186,6 @@ export class WtcGorditoCarousel {
     this.trackGap = 0;
     this._cloneCount = 0;
     this.positionOffset = null;
-    this.positionGeneration = 0;
-    this.positionTransaction = null;
-    this.navigationCallbackActive = false;
-    this.pendingLayout = false;
-    this.pendingLayoutRefresh = false;
     this.previewTrackIndex = null;
     this.previewPosition = null;
     this.renderedSlides = 1;
@@ -293,6 +197,7 @@ export class WtcGorditoCarousel {
     this.pointerDownSlideTimer = null;
     this.shouldSuppressClick = false;
     this.eventController = null;
+    this.bound = {} as BoundHandlers;
     this.originalSlides = [];
     this.filteredSlides = null;
     this.pagination = null;
@@ -305,17 +210,22 @@ export class WtcGorditoCarousel {
 
   /** @private Binds event handlers once so they can be reused and aborted cleanly. */
   bindMethods(): void {
-    this.bound = {
-      next: this.next.bind(this),
-      prev: this.prev.bind(this),
-      setPosition: this.setPosition.bind(this),
-      handleResize: this.handleResize.bind(this),
-      handlePointerDown: this.handlePointerDown.bind(this),
-      handlePointerMove: this.handlePointerMove.bind(this),
-      handlePointerUp: this.handlePointerUp.bind(this),
-      handleMediaLoad: this.handleMediaLoad.bind(this),
-      handleClick: this.handleClick.bind(this),
-    };
+    (
+      [
+        'next',
+        'prev',
+        'setPosition',
+        'handleResize',
+        'handlePointerDown',
+        'handlePointerMove',
+        'handlePointerUp',
+        'handleMediaLoad',
+        'handleClick',
+      ] as const
+    ).forEach((name) => {
+      (this.bound as unknown as Record<keyof BoundHandlers, (...args: never[]) => unknown>)[name] =
+        (this[name] as unknown as (...args: never[]) => unknown).bind(this);
+    });
   }
 
   /**
@@ -367,24 +277,23 @@ export class WtcGorditoCarousel {
   collectDirectSlides(): HTMLElement[] {
     if (!this.track) return [];
 
-    return toArray(this.track.children).filter(
-      (child): child is HTMLElement =>
-        isHTMLElement(child) &&
-        child.hasAttribute('data-wtcg-slide') &&
-        !child.hasAttribute('data-wtcg-cloned') &&
-        (this.options.slide ? child.matches(this.options.slide) : true),
+    return toArray<HTMLElement>(this.track.children as HTMLCollectionOf<HTMLElement>).filter(
+      (child) => {
+        if (!child.hasAttribute('data-wtcg-slide')) return false;
+        if (child.hasAttribute('data-wtcg-cloned')) return false;
+
+        return this.options.slide ? child.matches(this.options.slide) : true;
+      },
     );
   }
 
   /** @private Reads required structure, marks slides, and renders infinite clones. */
   buildOut(): void {
-    const list = this.slider.querySelector<HTMLElement>(':scope > [data-wtcg-list]');
-    if (!list) throw new Error('WtcGorditoCarousel requires a [data-wtcg-list] child.');
-    this.list = list;
+    this.list = this.slider.querySelector<HTMLElement>(':scope > [data-wtcg-list]')!;
+    if (!this.list) throw new Error('WtcGorditoCarousel requires a [data-wtcg-list] child.');
 
-    const track = this.list.querySelector<HTMLElement>(':scope > [data-wtcg-track]');
-    if (!track) throw new Error('WtcGorditoCarousel requires a [data-wtcg-track] child.');
-    this.track = track;
+    this.track = this.list.querySelector<HTMLElement>(':scope > [data-wtcg-track]')!;
+    if (!this.track) throw new Error('WtcGorditoCarousel requires a [data-wtcg-track] child.');
 
     this.slider.toggleAttribute('data-wtcg-draggable', this.isDraggable);
 
@@ -427,9 +336,7 @@ export class WtcGorditoCarousel {
       // where the renderer owns child reconciliation.
       for (let i = -this.cloneCount; i < 0; i += 1) {
         const index = modulo(i, this.slideCount);
-        const original = this.originalSlides[index];
-        if (!original) throw new Error('WtcGorditoCarousel could not resolve a slide clone.');
-        const clone = cloneHTMLElement(original);
+        const clone = this.originalSlides[index]!.cloneNode(true) as HTMLElement;
 
         clone.setAttribute('data-wtcg-cloned', '');
         clone.setAttribute('data-wtcg-index', String(i));
@@ -438,9 +345,7 @@ export class WtcGorditoCarousel {
       }
       for (let i = this.slideCount; i < this.slideCount + this.cloneCount; i += 1) {
         const index = modulo(i, this.slideCount);
-        const original = this.originalSlides[index];
-        if (!original) throw new Error('WtcGorditoCarousel could not resolve a slide clone.');
-        const clone = cloneHTMLElement(original);
+        const clone = this.originalSlides[index]!.cloneNode(true) as HTMLElement;
 
         clone.setAttribute('data-wtcg-cloned', '');
         clone.setAttribute('data-wtcg-index', String(i));
@@ -460,21 +365,26 @@ export class WtcGorditoCarousel {
   buildArrows(): void {
     if (!this.options.arrows) return;
 
-    const arrowTarget = toElement(this.options.arrows, this.slider) || this.slider;
-    const queryTarget = getQueryableTarget(arrowTarget, this.slider);
+    const arrowTarget = (toElement(this.options.arrows, this.slider) || this.slider) as {
+      querySelector?: (selectors: string) => Element | null;
+    };
 
-    this.prevArrow = queryTarget.querySelector<HTMLButtonElement>('[data-wtcg-prev]') || null;
-    this.nextArrow = queryTarget.querySelector<HTMLButtonElement>('[data-wtcg-next]') || null;
+    this.prevArrow = (arrowTarget.querySelector?.('[data-wtcg-prev]') ||
+      null) as HTMLButtonElement | null;
+    this.nextArrow = (arrowTarget.querySelector?.('[data-wtcg-next]') ||
+      null) as HTMLButtonElement | null;
   }
 
   /** @private Finds and prepares existing pagination buttons. */
   buildPagination(): void {
     if (!this.options.pagination) return;
 
-    const paginationTarget = toElement(this.options.pagination, this.slider) || this.slider;
-    const queryTarget = getQueryableTarget(paginationTarget, this.slider);
+    const paginationTarget = (toElement(this.options.pagination, this.slider) || this.slider) as {
+      querySelector?: (selectors: string) => Element | null;
+    };
 
-    this.pagination = queryTarget.querySelector<HTMLElement>('[data-wtcg-pagination]') || null;
+    this.pagination = (paginationTarget.querySelector?.('[data-wtcg-pagination]') ||
+      null) as HTMLElement | null;
     if (!this.pagination) return;
 
     this.pagination.hidden = !this.canNavigate;
@@ -486,7 +396,7 @@ export class WtcGorditoCarousel {
     );
     controls.forEach((control, paginationIndex) => {
       const slideIndex = paginationIndexes[paginationIndex];
-      const item = control.parentElement;
+      const item = control.parentElement as HTMLElement | null;
 
       // Pagination is author-owned markup, including static semantics. The core only
       // adds runtime behavior/state and hides extras so framework render trees
@@ -537,10 +447,9 @@ export class WtcGorditoCarousel {
       this.pagination.addEventListener(
         'click',
         (event: MouseEvent) => {
-          const control =
-            event.target instanceof Element
-              ? closestHTMLElement(event.target, '[data-wtcg-index]')
-              : null;
+          const control = (event.target as Element).closest(
+            '[data-wtcg-index]',
+          ) as HTMLElement | null;
           if (!control) return;
 
           this.goTo(Number(control.getAttribute('data-wtcg-index')));
@@ -613,24 +522,9 @@ export class WtcGorditoCarousel {
     // Restore the original DOM shape so external renderers keep ownership of
     // author-provided slides, controls, and semantics.
     // Will make using with React easier
-    this.invalidatePositionTransaction();
-    if (this.pointer && this.list) {
-      try {
-        this.list.releasePointerCapture(this.pointer.id);
-      } catch {
-        // Pointer capture may already have been released.
-      }
-    }
-    this.pointer = null;
-    this.dragging = false;
-    this.shouldSuppressClick = false;
-    this.pointerDownSlide = null;
-    this.clearDragPreview();
-    this.pendingLayout = false;
-    this.pendingLayoutRefresh = false;
     if (this.eventController) this.eventController.abort();
     if (this.resizeObserver) this.resizeObserver.disconnect();
-    window.clearTimeout(this.pointerDownSlideTimer ?? undefined);
+    window.clearTimeout(this.pointerDownSlideTimer as number | undefined);
 
     this.originalSlides.forEach((slide) => {
       slide.removeAttribute('data-wtcg-active');
@@ -679,10 +573,9 @@ export class WtcGorditoCarousel {
         button.removeAttribute('aria-current');
         button.removeAttribute('data-wtcg-index');
 
-        const item = button.parentElement;
-        if (item) {
-          item.removeAttribute('data-wtcg-active');
-          item.hidden = false;
+        if (button.parentElement) {
+          button.parentElement.removeAttribute('data-wtcg-active');
+          button.parentElement.hidden = false;
         }
       });
     }
@@ -855,17 +748,7 @@ export class WtcGorditoCarousel {
    */
   setPosition(): void {
     if (!this.enabled || !this.list || !this.track) return;
-    if (
-      this.dragging ||
-      this.navigationCallbackActive ||
-      (this.positionTransaction && this.animating)
-    ) {
-      this.deferLayout(false);
-      return;
-    }
 
-    this.pendingLayout = false;
-    this.pendingLayoutRefresh = false;
     this.setDimensions();
     this.updateUI(true);
     this.runInstantPosition();
@@ -873,31 +756,6 @@ export class WtcGorditoCarousel {
     if (this.options.adaptiveHeight) this.setAdaptiveHeight();
 
     dispatch(this.slider, 'setPosition', { carousel: this });
-  }
-
-  /** @private Defers layout work until an active navigation or drag is complete. */
-  deferLayout(refresh: boolean): void {
-    this.pendingLayout = true;
-    this.pendingLayoutRefresh ||= refresh;
-  }
-
-  /** @private Runs the latest deferred layout request when no gesture owns the track. */
-  flushPendingLayout(): void {
-    if (
-      !this.pendingLayout ||
-      !this.enabled ||
-      this.dragging ||
-      this.navigationCallbackActive ||
-      this.animating ||
-      this.positionTransaction
-    )
-      return;
-
-    const refresh = this.pendingLayoutRefresh;
-    this.pendingLayout = false;
-    this.pendingLayoutRefresh = false;
-    if (refresh) this.refresh(false);
-    else this.setPosition();
   }
 
   /** @private Measures the layout authored by CSS. */
@@ -947,11 +805,9 @@ export class WtcGorditoCarousel {
    */
   get allSlides(): HTMLElement[] {
     return this.track
-      ? toArray(this.track.children).filter(
-          (child): child is HTMLElement =>
-            isHTMLElement(child) &&
-            child.hasAttribute('data-wtcg-slide') &&
-            !child.hasAttribute('data-wtcg-filtered'),
+      ? toArray<HTMLElement>(this.track.children as HTMLCollectionOf<HTMLElement>).filter(
+          (child) =>
+            child.hasAttribute('data-wtcg-slide') && !child.hasAttribute('data-wtcg-filtered'),
         )
       : [];
   }
@@ -965,28 +821,6 @@ export class WtcGorditoCarousel {
    */
   getOriginalSlideByIndex(index: number): HTMLElement | undefined {
     return this.originalSlides[modulo(index, this.slideCount)];
-  }
-
-  /** @private Chooses the closest rendered clone for a logical target index. */
-  getNearestRenderedTrackIndex(originalIndex: number): number {
-    if (!this.options.infinite || !this.slideCount) return originalIndex;
-
-    const logicalIndex = modulo(originalIndex, this.slideCount);
-    const renderedSlides = this.allSlides;
-    let nearest = this.cloneCount + logicalIndex;
-    let nearestDistance = Math.abs(nearest - this.trackIndex);
-
-    renderedSlides.forEach((_, renderedIndex) => {
-      if (modulo(renderedIndex - this.cloneCount, this.slideCount) !== logicalIndex) return;
-
-      const distance = Math.abs(renderedIndex - this.trackIndex);
-      if (distance < nearestDistance) {
-        nearest = renderedIndex;
-        nearestDistance = distance;
-      }
-    });
-
-    return nearest;
   }
 
   /**
@@ -1091,14 +925,6 @@ export class WtcGorditoCarousel {
     this.previewPosition = null;
   }
 
-  /** @private Reads the currently rendered transform before taking over a drag. */
-  readRenderedTrackOffset(): number {
-    if (!this.track) return this.trackOffset;
-
-    const transform = window.getComputedStyle(this.track).transform;
-    return parseTranslateX(transform) ?? this.positionOffset ?? this.trackOffset;
-  }
-
   /**
    * Writes track movement. Movement lifecycle state, including
    * `[data-wtcg-instant]` on the carousel root, is owned by `runPositionChange()`
@@ -1118,110 +944,33 @@ export class WtcGorditoCarousel {
     return offset;
   }
 
-  /** @private Cancels the active position transaction and all of its browser work. */
-  invalidatePositionTransaction(): void {
-    this.positionGeneration += 1;
-
-    const transaction = this.positionTransaction;
-    if (transaction) {
-      transaction.cleanup();
-      transaction.rafIds.forEach((id) => window.cancelAnimationFrame(id));
-      if (transaction.timer !== null) window.clearTimeout(transaction.timer);
-    }
-
-    this.positionTransaction = null;
-    this.animating = false;
-    this.slider.removeAttribute('data-wtcg-instant');
-  }
-
-  /** @private Starts one cancellable transaction for track positioning. */
-  beginPositionTransaction(kind: PositionTransaction['kind'] = 'layout'): PositionTransaction {
-    this.invalidatePositionTransaction();
-    const transaction: PositionTransaction = {
-      generation: this.positionGeneration,
-      kind,
-      rafIds: new Set(),
-      timer: null,
-      cleanup: () => {},
-    };
-    this.positionTransaction = transaction;
-    if (kind === 'navigation') this.animating = true;
-    return transaction;
-  }
-
-  /** @private Returns whether a position transaction is still current. */
-  isCurrentPositionTransaction(transaction: PositionTransaction): boolean {
-    return (
-      this.positionTransaction === transaction && this.positionGeneration === transaction.generation
-    );
-  }
-
-  /** @private Schedules tracked animation-frame work for a position transaction. */
-  schedulePositionFrame(transaction: PositionTransaction, callback: () => void): void {
-    const id = window.requestAnimationFrame(() => {
-      transaction.rafIds.delete(id);
-      if (this.isCurrentPositionTransaction(transaction)) callback();
-    });
-    transaction.rafIds.add(id);
-  }
-
-  /** @private Settles a transaction once, ignoring stale completions. */
-  completePositionTransaction(transaction: PositionTransaction, callback: () => void): void {
-    if (!this.isCurrentPositionTransaction(transaction)) return;
-
-    transaction.cleanup();
-    transaction.rafIds.forEach((id) => window.cancelAnimationFrame(id));
-    if (transaction.timer !== null) window.clearTimeout(transaction.timer);
-    this.positionTransaction = null;
-    if (transaction.kind !== 'navigation') this.animating = false;
-    if (transaction.kind === 'navigation') this.navigationCallbackActive = true;
-    try {
-      callback();
-    } finally {
-      if (
-        transaction.kind === 'navigation' &&
-        this.positionTransaction === null &&
-        this.positionGeneration === transaction.generation
-      ) {
-        this.animating = false;
-      }
-      if (transaction.kind === 'navigation') this.navigationCallbackActive = false;
-    }
-    this.flushPendingLayout();
-  }
-
   /** @private @returns {boolean} Whether current CSS can emit a transform transition event. */
   hasTransformTransition(): boolean {
-    return this.getTransformTransitionTime() > 0;
-  }
-
-  /** @private Returns transform transition duration plus delay in milliseconds. */
-  getTransformTransitionTime(): number {
-    if (!this.track) return 0;
+    // We only use computed styles to detect the no-transition case. Timing still
+    // comes from native transitionend/transitioncancel events.
+    // I swear I tried with just using a `transitionrun` event listener but had too many issues
+    if (!this.track) return false;
 
     const style = window.getComputedStyle(this.track);
     const properties = style.transitionProperty
       .split(',')
       .map((property) => property.trim().toLowerCase());
-    const durations = style.transitionDuration.split(',').map(parseCssTime);
-    const delays = style.transitionDelay.split(',').map(parseCssTime);
+    const durations = style.transitionDuration.split(',').map((duration) => parseFloat(duration));
 
-    return properties.reduce((longest, property, index) => {
-      if (property !== 'all' && property !== 'transform') return longest;
+    return properties.some((property, index) => {
+      if (property !== 'all' && property !== 'transform') return false;
+
       const duration = durations[index % durations.length] || 0;
-      const delay = delays[index % delays.length] || 0;
-      return Math.max(longest, Math.max(0, duration + delay));
-    }, 0);
+      return duration > 0;
+    });
   }
 
   /** @private Writes a non-animated position and restores transitions after paint. */
-  runInstantPosition(
-    callback: () => void = () => {},
-    forcedOffset: number | null = null,
-    kind: PositionTransaction['kind'] = 'layout',
-  ): void {
-    const transaction = this.beginPositionTransaction(kind);
-    if (!this.track) return this.completePositionTransaction(transaction, callback);
+  runInstantPosition(callback: () => void = () => {}, forcedOffset: number | null = null): void {
+    if (!this.track) {
+      callback();
+      return;
+    }
 
     this.slider.setAttribute('data-wtcg-instant', '');
     this.applyPosition(forcedOffset);
@@ -1230,34 +979,32 @@ export class WtcGorditoCarousel {
     // the attribute removal with the transform write, causing an intended snap
     // to animate. Waiting two frames gives the browser one paint with
     // transitions disabled before normal transitions are restored.
-    this.schedulePositionFrame(transaction, () => {
-      this.schedulePositionFrame(transaction, () => {
-        if (!this.isCurrentPositionTransaction(transaction)) return;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         this.slider.removeAttribute('data-wtcg-instant');
-        this.completePositionTransaction(transaction, callback);
+        callback();
       });
     });
   }
 
   /** @private Applies movement and runs a callback after native transform transition completion, if any. */
-  runPositionChange(
-    instant: boolean,
-    callback: () => void = () => {},
-    kind: PositionTransaction['kind'] = 'layout',
-  ): void {
-    if (instant) return this.runInstantPosition(callback, null, kind);
+  runPositionChange(instant: boolean, callback: () => void = () => {}): void {
+    if (!this.track) {
+      callback();
+      return;
+    }
 
-    const wasAnimating = this.animating;
-    const transaction = this.beginPositionTransaction(kind);
-    if (wasAnimating) this.animating = true;
-    if (!this.track) return this.completePositionTransaction(transaction, callback);
+    if (instant) {
+      this.runInstantPosition(callback);
+      return;
+    }
 
     const track = this.track;
     const targetOffset = this.trackOffset;
     if (this.positionOffset === targetOffset) {
       this.slider.removeAttribute('data-wtcg-instant');
       this.applyPosition(targetOffset);
-      this.completePositionTransaction(transaction, callback);
+      callback();
 
       return;
     }
@@ -1269,17 +1016,17 @@ export class WtcGorditoCarousel {
 
     const cleanup = () => {
       track.removeEventListener('transitionend', handleDone);
+      track.removeEventListener('transitioncancel', handleDone);
     };
 
     const done = () => {
-      if (completed || !this.isCurrentPositionTransaction(transaction)) return;
+      if (completed) return;
       completed = true;
-      this.completePositionTransaction(transaction, callback);
+      cleanup();
+      callback();
     };
 
     const handleDone = (event: TransitionEvent) => {
-      // A cancellation event may belong to a superseding transform write, so only
-      // the natural transitionend event is allowed to settle this transaction.
       if (isTransformEvent(event)) done();
     };
 
@@ -1291,19 +1038,17 @@ export class WtcGorditoCarousel {
     // Let transition-enabled styles apply before writing the transform. This
     // avoids coalescing instant-state removal with the movement that should
     // animate, especially at clone boundaries.
-    this.schedulePositionFrame(transaction, () => {
+    window.requestAnimationFrame(() => {
       if (!this.hasTransformTransition()) {
         this.applyPosition(targetOffset);
-        done();
+        callback();
 
         return;
       }
 
-      transaction.cleanup = cleanup;
       track.addEventListener('transitionend', handleDone);
+      track.addEventListener('transitioncancel', handleDone);
       this.applyPosition(targetOffset);
-      const transitionTime = this.getTransformTransitionTime();
-      transaction.timer = window.setTimeout(done, transitionTime + 50);
     });
   }
 
@@ -1538,37 +1283,31 @@ export class WtcGorditoCarousel {
     });
 
     this.currentSlide = nextSlide;
-    this.trackIndex = this.options.infinite
-      ? this.getNearestRenderedTrackIndex(targetOriginal)
-      : nextSlide;
+    this.trackIndex = this.options.infinite ? this.cloneCount + targetOriginal : nextSlide;
     this.animating = true;
     this.updateUI();
 
-    this.runPositionChange(
-      dontAnimate,
-      () => {
-        if (this.options.infinite) {
-          const originalStart = this.cloneCount;
-          const originalEnd = this.cloneCount + this.slideCount;
+    this.runPositionChange(dontAnimate, () => {
+      if (this.options.infinite) {
+        const originalStart = this.cloneCount;
+        const originalEnd = this.cloneCount + this.slideCount;
 
-          if (this.trackIndex < originalStart || this.trackIndex >= originalEnd) {
-            this.trackIndex = this.cloneCount + this.currentSlide;
-            // Clone count provides visual buffer, but logical state should not sit
-            // on cloned rendered slides. Normalize as soon as the current rendered
-            // slide leaves the original band so arrows, drag, pagination, and
-            // focusOnSelect all behave consistently.
-            // Runtime CSS variables are refreshed during this invisible correction;
-            // otherwise effects based on offset/distance would animate too.
-            this.updateUI(false);
-            this.runInstantPosition(() => this.postSlide(nextSlide), null, 'navigation');
+        if (this.trackIndex < originalStart || this.trackIndex >= originalEnd) {
+          this.trackIndex = this.cloneCount + this.currentSlide;
+          // Clone count provides visual buffer, but logical state should not sit
+          // on cloned rendered slides. Normalize as soon as the current rendered
+          // slide leaves the original band so arrows, drag, pagination, and
+          // focusOnSelect all behave consistently.
+          // Runtime CSS variables are refreshed during this invisible correction;
+          // otherwise effects based on offset/distance would animate too.
+          this.updateUI(false);
+          this.runInstantPosition(() => this.postSlide(nextSlide));
 
-            return;
-          }
+          return;
         }
-        this.postSlide(nextSlide);
-      },
-      'navigation',
-    );
+      }
+      this.postSlide(nextSlide);
+    });
   }
 
   /**
@@ -1579,6 +1318,8 @@ export class WtcGorditoCarousel {
    * @fires wtcg:afterChange
    */
   postSlide(index: number): void {
+    this.animating = false;
+
     if (this.options.adaptiveHeight) this.setAdaptiveHeight();
     if (this.options.focusOnChange) {
       const current = this.getCurrentRenderedSlide() || this.getOriginalSlideByIndex(index);
@@ -1593,18 +1334,12 @@ export class WtcGorditoCarousel {
 
   /** @private Debounced resize/orientation handler. */
   handleResize(): void {
-    window.clearTimeout(this.windowTimer ?? undefined);
+    window.clearTimeout(this.windowTimer as number | undefined);
 
     this.windowTimer = window.setTimeout(() => {
       const nextSlides = this.slides;
       const nextScroll = this.scrollAmount;
-      const needsRefresh = nextSlides !== this.renderedSlides || nextScroll !== this.renderedScroll;
-      if (this.dragging || (this.positionTransaction && this.animating)) {
-        this.deferLayout(needsRefresh);
-        return;
-      }
-
-      if (needsRefresh) {
+      if (nextSlides !== this.renderedSlides || nextScroll !== this.renderedScroll) {
         this.refresh(false);
       } else {
         this.setPosition();
@@ -1633,14 +1368,10 @@ export class WtcGorditoCarousel {
     if (this.animating && this.options.waitForAnimate) return;
 
     this.clearDragPreview();
-    window.clearTimeout(this.pointerDownSlideTimer ?? undefined);
-    const renderedOffset = this.readRenderedTrackOffset();
-    this.invalidatePositionTransaction();
-    this.slider.setAttribute('data-wtcg-dragging', '');
-    this.applyPosition(renderedOffset);
+    window.clearTimeout(this.pointerDownSlideTimer as number | undefined);
     this.pointerDownSlide =
       event.target instanceof Element
-        ? closestHTMLElement(event.target, '[data-wtcg-slide]')
+        ? (event.target.closest('[data-wtcg-slide]') as HTMLElement | null)
         : null;
 
     this.pointer = {
@@ -1649,12 +1380,13 @@ export class WtcGorditoCarousel {
       startY: event.clientY,
       lastX: event.clientX,
       lastY: event.clientY,
-      startOffset: renderedOffset,
-      currentOffset: renderedOffset,
+      startOffset: this.trackOffset,
+      currentOffset: this.trackOffset,
       moved: false,
     };
 
     this.dragging = true;
+    this.slider.setAttribute('data-wtcg-dragging', '');
     this.list.setPointerCapture(event.pointerId);
   }
 
@@ -1696,32 +1428,6 @@ export class WtcGorditoCarousel {
     this.pointer.lastY = event.clientY;
   }
 
-  /** @private Cancels a drag without treating cancellation coordinates as a swipe. */
-  cancelPointerDrag(): void {
-    if (!this.pointer) return;
-
-    const pointerId = this.pointer.id;
-    this.dragging = false;
-    this.slider.removeAttribute('data-wtcg-dragging');
-
-    try {
-      this.list.releasePointerCapture(pointerId);
-    } catch {
-      // Pointer capture may already have been released by lostpointercapture.
-    }
-
-    this.pointer = null;
-    this.pointerDownSlide = null;
-    this.shouldSuppressClick = false;
-    this.clearDragPreview();
-    this.updateSlideClasses();
-    window.clearTimeout(this.pointerDownSlideTimer ?? undefined);
-    this.pointerDownSlideTimer = null;
-
-    // Cancellation restores the committed slide position; it never dispatches swipe.
-    this.runPositionChange(false);
-  }
-
   /**
    * Finishes pointer drag/swipe tracking and optionally navigates.
    *
@@ -1731,11 +1437,6 @@ export class WtcGorditoCarousel {
    */
   handlePointerUp(event: PointerEvent): void {
     if (!this.dragging || !this.pointer || event.pointerId !== this.pointer.id) return;
-
-    if (event.type === 'pointercancel' || event.type === 'lostpointercapture') {
-      this.cancelPointerDrag();
-      return;
-    }
 
     const deltaX = event.clientX - this.pointer.startX;
     const mainDelta = deltaX;
@@ -1784,7 +1485,7 @@ export class WtcGorditoCarousel {
     this.shouldSuppressClick = Boolean(this.pointer.moved);
     this.pointer = null;
 
-    window.clearTimeout(this.pointerDownSlideTimer ?? undefined);
+    window.clearTimeout(this.pointerDownSlideTimer as number | undefined);
     this.pointerDownSlideTimer = window.setTimeout(() => {
       this.pointerDownSlide = null;
     }, 500);
@@ -1812,7 +1513,7 @@ export class WtcGorditoCarousel {
 
     const clickedSlide =
       event.target instanceof Element
-        ? closestHTMLElement(event.target, '[data-wtcg-slide]')
+        ? (event.target.closest('[data-wtcg-slide]') as HTMLElement | null)
         : null;
     const slide = clickedSlide || (this.isDraggable ? this.pointerDownSlide : null);
     this.pointerDownSlide = null;
@@ -1872,7 +1573,7 @@ export class WtcGorditoCarousel {
    * @returns {*}
    */
   getOption(option: keyof WtcGorditoCarouselOptions | string): unknown {
-    return this.options[option];
+    return this.options[option as keyof WtcGorditoCarouselOptions];
   }
 
   /**
@@ -1894,7 +1595,7 @@ export class WtcGorditoCarousel {
       Object.assign(this.options, option);
       refresh = Boolean(value);
     } else if (typeof option === 'string') {
-      this.options[option] = value;
+      (this.options as unknown as Record<string, unknown>)[option] = value;
     }
 
     if (refresh) this.refresh();
@@ -1912,21 +1613,15 @@ export class WtcGorditoCarousel {
    * @fires wtcg:reInit
    */
   addSlide(markup: HTMLElement | string, index = this.slideCount, addBefore = false): void {
-    let element: HTMLElement;
-    if (markup instanceof HTMLElement) {
-      element = markup;
-    } else {
+    let element: HTMLElement = markup as HTMLElement;
+    if (!(markup instanceof HTMLElement)) {
       // Parses an HTML string into a single `Element`.
       // Uses a `<template>` element to avoid side effects like loading images or
       // executing scripts during parsing.
       const template = document.createElement('template');
 
       template.innerHTML = markup.trim();
-      const parsed = template.content.firstElementChild;
-      if (!parsed || !isHTMLElement(parsed)) {
-        throw new Error('WtcGorditoCarousel requires valid slide markup.');
-      }
-      element = parsed;
+      element = template.content.firstElementChild as HTMLElement;
     }
 
     const target = addBefore ? index : index + 1;

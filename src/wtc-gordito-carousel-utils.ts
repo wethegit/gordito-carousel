@@ -3,7 +3,7 @@
  * into a true `Array`.
  *
  * @template T
- * @param {ArrayLike<T>|null|undefined} value
+ * @param value
  * @returns {T[]}
  */
 export function toArray<T>(value: ArrayLike<T> | null | undefined): T[] {
@@ -19,21 +19,17 @@ export function toArray<T>(value: ArrayLike<T> | null | undefined): T[] {
  * @param {unknown} value - Element, selector, boolean, or null.
  * @param {HTMLElement|null} [fallback=null] - Default returned when `value` is
  *   falsy, `true`, or unresolvable.
- * @returns {HTMLElement|Window|Document|null}
+ * @returns {Element|Window|Document|null}
  */
 export function toElement(
   value: unknown,
-  fallback: HTMLElement | null = null,
-): HTMLElement | Window | Document | null {
+  fallback?: HTMLElement | null,
+): Element | Window | Document | null {
   if (!value) return fallback || null;
   if (value === true) return fallback || null;
-  if (value instanceof HTMLElement) return value;
-  if (value === window) return window;
-  if (value === document) return document;
-  if (typeof value === 'string') {
-    const element = document.querySelector(value);
-    return element instanceof HTMLElement ? element : fallback || null;
-  }
+  if (value instanceof HTMLElement || value === window || value === document)
+    return value as Element | Window | Document;
+  if (typeof value === 'string') return document.querySelector(value);
   return fallback || null;
 }
 
@@ -68,6 +64,8 @@ export function cssNumber(
  * @returns {Element|null}
  */
 export function createElementFromHtml(html: string): Element | null {
+  // neat little function to deal with random HTML where you need
+  // to replace just parts of it without regex shenanigans
   const template = document.createElement('template');
   template.innerHTML = html.trim();
   return template.content.firstElementChild;
