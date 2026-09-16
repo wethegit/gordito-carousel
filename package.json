@@ -36,15 +36,21 @@
     "check": "npm run format:check && npm run lint && npm run typecheck",
     "changeset": "changeset",
     "version": "changeset version",
-    "prepare": "husky"
+    "prepare": "husky",
+    "site:dev": "vite --config site/vite.config.js",
+    "site:build": "vite build --config site/vite.config.js"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^3.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
     "husky": "^9.1.7",
     "oxfmt": "^0.68.0",
     "oxlint": "^1.83.0",
-    "typescript": "^7.0.2"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^7.0.2",
+    "vite": "^6.0.5"
   },
   "engines": {
     "node": ">=24"

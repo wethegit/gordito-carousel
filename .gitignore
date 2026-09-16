@@ -78,6 +78,9 @@ web_modules/
 .next
 out
 
+# Documentation site build output
+site/site-dist/
+
 # Nuxt.js build / generate output
 .nuxt
 dist
