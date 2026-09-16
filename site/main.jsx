@@ -161,6 +161,101 @@ function Controls({ id, count, arrowsInPagination = false }) {
   );
 }
 
+const HERO_OPTIONS = {
+  centerMode: true,
+  drag: 'free',
+  focusOnSelect: true,
+  infinite: true,
+};
+
+function HeroCarousel() {
+  const ref = useRef(null);
+  const listId = useId();
+  const titleId = useId();
+  const heroImages = IMAGES.slice(0, 4);
+  useEffect(() => {
+    const carousel = new WtcGorditoCarousel(ref.current, HERO_OPTIONS);
+    return () => carousel.destroy();
+  }, []);
+  return (
+    <div className="hero-orbit">
+      <div
+        className="hero-carousel"
+        data-wtcg-carousel
+        role="region"
+        aria-roledescription="carousel"
+        aria-labelledby={titleId}
+        ref={ref}
+      >
+        <h2 className="sr-only" id={titleId}>
+          Gordito carousel preview
+        </h2>
+        <div data-wtcg-list id={listId}>
+          <ul data-wtcg-track>
+            {heroImages.map((image, index) => (
+              <li
+                className="hero-slide"
+                data-wtcg-slide
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${index + 1} of ${heroImages.length}`}
+                key={image.id}
+              >
+                <div className="orbit-card">
+                  <span>
+                    0{index + 1} / 0{heroImages.length}
+                  </span>
+                  <img src={imageUrl(image, '900/620')} alt={image.title} />
+                  <b>{image.title}</b>
+                  <em>{image.place}</em>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <button
+          className="hero-arrow prev"
+          data-wtcg-prev
+          type="button"
+          aria-controls={listId}
+          aria-label="Previous preview slide"
+        >
+          ←
+        </button>
+        <button
+          className="hero-arrow next"
+          data-wtcg-next
+          type="button"
+          aria-controls={listId}
+          aria-label="Next preview slide"
+        >
+          →
+        </button>
+        <div className="hero-pagination" role="group" aria-label="Choose preview slide">
+          <ol data-wtcg-pagination>
+            {heroImages.map((image, index) => (
+              <li key={image.id}>
+                <button data-wtcg-page type="button" aria-label={`Slide ${index + 1}`}>
+                  {index + 1}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <p className="sr-only" data-wtcg-status aria-live="polite" aria-atomic="true">
+          Slide {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.CURRENT} of{' '}
+          {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.TOTAL}
+        </p>
+      </div>
+      <div className="orbit-stamp">
+        drag
+        <br />→<br />
+        release
+      </div>
+    </div>
+  );
+}
+
 function Demo({
   number,
   eyebrow,
@@ -284,7 +379,7 @@ const snippetSet = ({
     ? '    <li className="story-slide" data-wtcg-slide>\n      <img alt="" />\n      <div><small>Field note</small><h3>Slide title</h3><p>Slide content</p><a href="#details">Read more</a><button>Save slide</button></div>\n    </li>'
     : '    <li data-wtcg-slide><figure className="photo-slide"><img alt="Slide title" /><figcaption>Slide title</figcaption></figure></li>';
   const style = deck
-    ? `.deck [data-wtcg-list] { --wtcg-slide-size: var(--card); overflow: visible; }\n.deck .photo-slide { transform: rotate(clamp(-80deg, calc(var(--wtcg-slide-offset, 0) * 9deg), 80deg)); }`
+    ? `.deck [data-wtcg-list] { --wtcg-slide-size: var(--card); overflow: visible; }\n.deck [data-wtcg-track] { transition: transform 500ms cubic-bezier(.22, 1, .36, 1); }\n.deck .photo-slide { transform: rotate(clamp(-80deg, calc(var(--wtcg-slide-offset, 0) * 9deg), 80deg)); transition: transform 500ms cubic-bezier(.22, 1, .36, 1); }\n.deck[data-wtcg-dragging] .photo-slide, .deck[data-wtcg-instant] .photo-slide { transition: none; }`
     : responsive
       ? `.responsive [data-wtcg-list] { --wtcg-slides: 1; --wtcg-slide-size: 100cqw; }\n@container (min-width: 42rem) { .responsive [data-wtcg-list] { --wtcg-slides: 2; } }\n@container (min-width: 64rem) { .responsive [data-wtcg-list] { --wtcg-slides: 4; } }`
       : className === 'natural'
@@ -389,23 +484,7 @@ function App() {
               Explore the demos <span>↓</span>
             </a>
           </div>
-          <div className="hero-orbit">
-            <div className="orbit-card orbit-back">
-              08 / 08
-              <br />
-              <b>Focus</b>
-            </div>
-            <div className="orbit-card orbit-main">
-              <span>01 / 08</span>
-              <img src={imageUrl(IMAGES[0], '900/620')} alt="Mountain lake" />
-              <b>Natural by design</b>
-            </div>
-            <div className="orbit-stamp">
-              drag
-              <br />→<br />
-              release
-            </div>
-          </div>
+          <HeroCarousel />
         </section>
         <section className="principles">
           <p className="kicker">The shape of the API</p>
