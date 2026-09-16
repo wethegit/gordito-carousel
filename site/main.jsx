@@ -4,18 +4,18 @@ import { WtcGorditoCarousel, WTC_GORDITO_CAROUSEL_STATUS_TOKENS } from '../src/i
 import '../src/wtc-gordito-carousel.css';
 import './styles.css';
 
-const IMAGES = [
+const DEMO_IMAGES = [
   { id: 1015, title: 'Mountain lake', place: 'Dolomites', w: 1200, h: 760 },
-  { id: 1025, title: 'Dog portrait', place: 'At home', w: 760, h: 1040 },
-  { id: 1036, title: 'Forest road', place: 'Oregon', w: 1320, h: 760 },
-  { id: 1040, title: 'Sea cliff', place: 'Cornwall', w: 820, h: 1040 },
-  { id: 1043, title: 'Open field', place: 'Yorkshire', w: 1180, h: 820 },
-  { id: 1050, title: 'Harbor', place: 'Copenhagen', w: 980, h: 980 },
-  { id: 1067, title: 'Alpine valley', place: 'Tyrol', w: 1360, h: 780 },
-  { id: 1074, title: 'Desert', place: 'Utah', w: 840, h: 1120 },
+  { id: 1025, title: 'Dog portrait', place: 'At home', w: 900, h: 570 },
+  { id: 1036, title: 'Forest road', place: 'Oregon', w: 1500, h: 950 },
+  { id: 1040, title: 'Sea cliff', place: 'Cornwall', w: 750, h: 475 },
+  { id: 1043, title: 'Open field', place: 'Yorkshire', w: 1350, h: 855 },
+  { id: 1050, title: 'Harbor', place: 'Copenhagen', w: 1050, h: 665 },
+  { id: 1067, title: 'Alpine valley', place: 'Tyrol', w: 1200, h: 760 },
+  { id: 1074, title: 'Desert', place: 'Utah', w: 900, h: 570 },
 ];
-const LANDSCAPE_IMAGES = [IMAGES[0], IMAGES[2], IMAGES[4], IMAGES[6]];
-const FULL_WIDTH_IMAGES = LANDSCAPE_IMAGES.map((image) => ({ ...image, w: 1200, h: 760 }));
+const LANDSCAPE_IMAGES = [DEMO_IMAGES[0], DEMO_IMAGES[2], DEMO_IMAGES[4], DEMO_IMAGES[6]];
+const FULL_WIDTH_IMAGES = LANDSCAPE_IMAGES;
 const imageUrl = (image) => `https://picsum.photos/id/${image.id}/${image.w}/${image.h}`;
 const fanOptions = {
   centerMode: true,
@@ -119,7 +119,27 @@ function SourceCode({ markup, styles, script }) {
     </details>
   );
 }
-function Slide({ image, index, total }) {
+function Slide({ image, index, total, interactive = false }) {
+  if (interactive) {
+    return (
+      <li
+        className="story-slide"
+        data-wtcg-slide
+        role="group"
+        aria-roledescription="slide"
+        aria-label={`${index + 1} of ${total}`}
+      >
+        <div>
+          <h3>{image.title}</h3>
+          <p>A small pause in the middle of the day. Only the visible story is tabbable.</p>
+          <div className="slide-actions">
+            <a href="#docs">Read more</a>
+            <button type="button">Save slide</button>
+          </div>
+        </div>
+      </li>
+    );
+  }
   return (
     <li
       data-wtcg-slide
@@ -140,7 +160,6 @@ function Slide({ image, index, total }) {
           draggable={false}
         />
         <figcaption>
-          <span>0{index + 1}</span>
           <strong>{image.title}</strong>
           <em>{image.place}</em>
         </figcaption>
@@ -148,10 +167,17 @@ function Slide({ image, index, total }) {
     </li>
   );
 }
-function Controls({ count }) {
+function Controls({ count, id, integrated = false }) {
   return (
     <div className="controls" role="group" aria-label="Choose slide">
       <ol data-wtcg-pagination>
+        {integrated && (
+          <li>
+            <button data-wtcg-prev type="button" aria-controls={id}>
+              ← Prev
+            </button>
+          </li>
+        )}
         {Array.from({ length: count }, (_, index) => (
           <li key={index}>
             <button data-wtcg-page type="button" aria-label={`Slide ${index + 1}`}>
@@ -159,17 +185,25 @@ function Controls({ count }) {
             </button>
           </li>
         ))}
+        {integrated && (
+          <li>
+            <button data-wtcg-next type="button" aria-controls={id}>
+              Next →
+            </button>
+          </li>
+        )}
       </ol>
     </div>
   );
 }
-function CarouselStage({ className, options, slides = IMAGES, title, children }) {
+function CarouselStage({ className, options, slides = DEMO_IMAGES, title, children }) {
   const ref = useRef(null);
   const titleId = useId();
   const listId = useId();
   // `slides` is reserved for the image-data collection. Custom content belongs
   // in `children`, which is rendered after the carousel controls below.
-  const imageSlides = Array.isArray(slides) ? slides : IMAGES;
+  const imageSlides = Array.isArray(slides) ? slides : DEMO_IMAGES;
+  const integratedControls = className === 'infinite';
   useEffect(() => {
     const carousel = new WtcGorditoCarousel(ref.current, options);
     return () => carousel.destroy();
@@ -180,38 +214,52 @@ function CarouselStage({ className, options, slides = IMAGES, title, children })
       data-wtcg-carousel
       role="region"
       aria-roledescription="carousel"
-      aria-labelledby={titleId}
+      {...(title ? { 'aria-labelledby': titleId } : { 'aria-label': `${className} carousel` })}
       ref={ref}
     >
-      <h3 className="sr-only" id={titleId}>
-        {title}
-      </h3>
+      {title && (
+        <h3 className="sr-only" id={titleId}>
+          {title}
+        </h3>
+      )}
       <div data-wtcg-list id={listId}>
         <ul data-wtcg-track>
           {imageSlides.map((image, index) => (
-            <Slide key={image.id} image={image} index={index} total={imageSlides.length} />
+            <Slide
+              key={image.id}
+              image={image}
+              index={index}
+              total={imageSlides.length}
+              interactive={className === 'interactive'}
+            />
           ))}
         </ul>
       </div>
-      <button
-        className="stage-arrow prev"
-        data-wtcg-prev
-        type="button"
-        aria-controls={listId}
-        aria-label="Previous slide"
-      >
-        ←
-      </button>
-      <button
-        className="stage-arrow next"
-        data-wtcg-next
-        type="button"
-        aria-controls={listId}
-        aria-label="Next slide"
-      >
-        →
-      </button>
-      {options.pagination && <Controls id={listId} count={imageSlides.length} />}
+      {!integratedControls && (
+        <button
+          className="stage-arrow prev"
+          data-wtcg-prev
+          type="button"
+          aria-controls={listId}
+          aria-label="Previous slide"
+        >
+          ←
+        </button>
+      )}
+      {!integratedControls && (
+        <button
+          className="stage-arrow next"
+          data-wtcg-next
+          type="button"
+          aria-controls={listId}
+          aria-label="Next slide"
+        >
+          →
+        </button>
+      )}
+      {options.pagination && (
+        <Controls id={listId} count={imageSlides.length} integrated={integratedControls} />
+      )}
       <p className="sr-only" data-wtcg-status aria-live="polite" aria-atomic="true">
         Slide {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.CURRENT} of{' '}
         {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.TOTAL}
@@ -227,92 +275,62 @@ const snippet = (className, options, count = 4) => ({
   count,
 });
 const demos = [
-  [
-    '01',
-    'Defaults',
-    'Bare minimum basics',
-    'The default behavior advances one image at a time and wires existing previous/next buttons.',
-    'basic',
-    {},
-    LANDSCAPE_IMAGES,
-  ],
-  [
-    '02',
-    'Natural sizes',
-    'Different image sizes',
-    'Keep each image’s natural width with auto-sized slides. Center mode keeps the active image in view.',
-    'natural',
-    { centerMode: true, drag: 'free', focusOnSelect: true, initialSlide: 2 },
-    IMAGES,
-  ],
-  [
-    '03',
-    'Center mode',
-    'Live drag emphasis',
-    'Drag slowly to see active state and fractional runtime variables update with the pointer.',
-    'center',
-    { centerMode: true, pagination: true, drag: 'free', focusOnSelect: true },
-    IMAGES,
-  ],
-  [
-    '04',
-    'Flexible controls',
-    'Arrows inside pagination',
-    'Previous and next can live in the same list as pagination buttons.',
-    'infinite',
-    { pagination: true, infinite: true },
-    LANDSCAPE_IMAGES,
-  ],
-  [
-    '05',
-    'Responsive CSS',
-    'Responsive slide count',
-    'Resize the browser. Container queries change the number of visible slides while the core refreshes measurements.',
-    'responsive',
-    { pagination: true, infinite: false },
-    IMAGES,
-  ],
-  [
-    '06',
-    'Full width',
-    'Viewport-width carousel',
-    'Break out of the reading column without changing the markup or API.',
-    'viewport',
-    { pagination: true, infinite: true },
-    FULL_WIDTH_IMAGES,
-  ],
-  [
-    '07',
-    'Card carousel',
-    'A stacked card carousel',
-    'Cards overlap in a deliberate stack. The active card stays clear while offset and distance place quieter cards behind it.',
-    'card-carousel',
-    fanOptions,
-    LANDSCAPE_IMAGES,
-  ],
-  [
-    '08',
-    'Focus',
-    'Interactive slide content',
-    'Only the active rendered range is tabbable. Try tabbing through the slide, then drag it away.',
-    'interactive',
-    { pagination: true, infinite: true },
-    IMAGES.slice(0, 5),
-  ],
+  { title: 'Bare minimum basics', className: 'basic', options: {}, slides: LANDSCAPE_IMAGES },
+  {
+    title: 'Different image sizes',
+    className: 'natural',
+    options: { centerMode: true, drag: 'free', focusOnSelect: true, initialSlide: 2 },
+    slides: DEMO_IMAGES,
+  },
+  {
+    title: 'Live drag emphasis',
+    className: 'center',
+    options: { centerMode: true, pagination: true, drag: 'free', focusOnSelect: true },
+    slides: DEMO_IMAGES,
+  },
+  {
+    title: 'Arrows inside pagination',
+    className: 'infinite',
+    options: { pagination: true, infinite: true },
+    slides: LANDSCAPE_IMAGES,
+  },
+  {
+    title: 'Responsive slide count',
+    className: 'responsive',
+    options: { pagination: true, infinite: false },
+    slides: DEMO_IMAGES,
+  },
+  {
+    title: 'Viewport-width carousel',
+    className: 'viewport',
+    options: { pagination: true, infinite: true },
+    slides: FULL_WIDTH_IMAGES,
+  },
+  {
+    title: 'A stacked card carousel',
+    className: 'card-carousel',
+    options: fanOptions,
+    slides: LANDSCAPE_IMAGES,
+  },
+  {
+    title: 'Interactive slide content',
+    className: 'interactive',
+    options: { pagination: true, infinite: true },
+    slides: DEMO_IMAGES.slice(0, 5),
+  },
 ];
-function Demo({ item, number }) {
-  const [eyebrow, title, _description, className, options, slides] = item;
+function Demo({ item }) {
+  const { title, className, options, slides } = item;
   const code = snippet(className, options, slides.length);
   return (
-    <article className="demo" id={`demo-${number}`}>
+    <article className={`demo demo-${className}`} id={`demo-${className}`}>
       <div className="demo-intro">
-        <div className="eyebrow">{eyebrow}</div>
         <h2>{title}</h2>
       </div>
       <CarouselStage
         className={className}
         options={options}
-        slides={Array.isArray(slides) ? slides : IMAGES}
+        slides={Array.isArray(slides) ? slides : DEMO_IMAGES}
         title={title}
       />
       <SourceCode markup={code.markup} styles={code.styles} script={code.script} />
@@ -323,14 +341,8 @@ function FeatureFan() {
   const code = snippet('fan', fanOptions, LANDSCAPE_IMAGES.length);
   return (
     <section className="feature-fan" aria-label="Featured live demo">
-      <CarouselStage
-        className="fan"
-        options={fanOptions}
-        slides={LANDSCAPE_IMAGES}
-        title="A fan that follows the pointer"
-      />
+      <CarouselStage className="fan" options={fanOptions} slides={LANDSCAPE_IMAGES} />
       <div className="feature-note">
-        <span>Featured interaction</span>
         <strong>A fan that follows the pointer</strong>
         <p>
           Cards keep their own angle and depth while the track follows the drag. Release to settle
@@ -806,7 +818,7 @@ function App() {
           </div>
         </section>
         {demos.map((item) => (
-          <Demo key={item[0]} item={item} number={item[0]} />
+          <Demo key={item.className} item={item} />
         ))}
         <Docs />
       </main>
