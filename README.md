@@ -9,23 +9,16 @@ npm install @wethegit/gordito-carousel
 ```
 
 ```js
-import { WtcGorditoCarousel } from "@wethegit/gordito-carousel";
-import "@wethegit/gordito-carousel/wtc-gordito-carousel.css";
+import { WtcGorditoCarousel } from '@wethegit/gordito-carousel';
+import '@wethegit/gordito-carousel/wtc-gordito-carousel.css';
 
-const carousel = new WtcGorditoCarousel(
-  document.querySelector("[data-wtcg-carousel]"),
-  {
-    pagination: true,
-  },
-);
+const carousel = new WtcGorditoCarousel(document.querySelector('[data-wtcg-carousel]'), {
+  pagination: true,
+});
 ```
 
 ```html
-<section
-  data-wtcg-carousel
-  aria-roledescription="carousel"
-  aria-label="Featured items"
->
+<section data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">
   <div id="featured-carousel-slides" data-wtcg-list>
     <ul data-wtcg-track>
       <li data-wtcg-slide>First slide</li>
@@ -65,18 +58,14 @@ const carousel = new WtcGorditoCarousel(
     </ol>
   </div>
 
-  <p data-wtcg-status aria-live="polite" aria-atomic="true">
-    Slide {current} of {total}
-  </p>
+  <p data-wtcg-status aria-live="polite" aria-atomic="true">Slide {current} of {total}</p>
 </section>
 ```
 
 Options can also be set in markup. Programmatic settings are merged first, then `data-wtcg` overrides them.
 
 ```html
-<section data-wtcg-carousel data-wtcg='{"pagination":true,"drag":"free"}'>
-  ...
-</section>
+<section data-wtcg-carousel data-wtcg='{"pagination":true,"drag":"free"}'>...</section>
 ```
 
 ## Exports
@@ -154,8 +143,7 @@ Core behavior for pagination:
 
 ```jsx
 <p data-wtcg-status aria-live="polite" aria-atomic="true">
-  Slide {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.CURRENT} of{" "}
-  {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.TOTAL}
+  Slide {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.CURRENT} of {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.TOTAL}
 </p>
 ```
 
@@ -329,7 +317,7 @@ new WtcGorditoCarousel(element, {
   focusOnChange: false,
   infinite: true,
   initialSlide: 0,
-  slide: "",
+  slide: '',
   touchThreshold: 5,
   waitForAnimate: true,
 });
