@@ -38,6 +38,7 @@
     "version": "changeset version",
     "release": "npm run build && changeset publish",
     "prepare": "husky",
+    "dev": "npm run site:dev",
     "site:dev": "vite --config site/vite.config.js",
     "site:build": "vite build --config site/vite.config.js"
   },
