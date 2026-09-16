@@ -17,6 +17,13 @@ const DEMO_IMAGES = [
 ];
 const LANDSCAPE_IMAGES = [DEMO_IMAGES[0], DEMO_IMAGES[2], DEMO_IMAGES[4], DEMO_IMAGES[6]];
 const FULL_WIDTH_IMAGES = LANDSCAPE_IMAGES;
+const NATURAL_IMAGES = [
+  { id: 1015, title: 'Mountain lake', place: 'Dolomites', w: 1200, h: 760 },
+  { id: 1025, title: 'Dog portrait', place: 'At home', w: 760, h: 1040 },
+  { id: 1036, title: 'Forest road', place: 'Oregon', w: 1320, h: 760 },
+  { id: 1040, title: 'Sea cliff', place: 'Cornwall', w: 820, h: 1040 },
+  { id: 1050, title: 'Harbor', place: 'Copenhagen', w: 980, h: 980 },
+];
 const imageUrl = (image) => `https://picsum.photos/id/${image.id}/${image.w}/${image.h}`;
 const fanOptions = {
   centerMode: true,
@@ -168,12 +175,7 @@ function Slide({ image, index, total, interactive = false }) {
       aria-roledescription="slide"
       aria-label={`${index + 1} of ${total}`}
     >
-      <figure
-        className="photo-slide"
-        style={{
-          '--asset-width': `${Math.min(28, Math.max(15, (image.w / image.h) * 18))}rem`,
-        }}
-      >
+      <figure className="photo-slide">
         <img
           src={imageUrl(image)}
           width={image.w}
@@ -275,7 +277,7 @@ const formatOptions = (options) => {
   if (!entries.length) return 'const carousel = new WtcGorditoCarousel(element);';
   return `const carousel = new WtcGorditoCarousel(element, {\n${entries.map(([key, value]) => `  ${key}: ${JSON.stringify(value)},`).join('\n')}\n});`;
 };
-const markupFor = (className, count) => {
+const markupFor = (className, count, paginationEnabled = false) => {
   const slide =
     className === 'interactive'
       ? `    <li class="story-slide" data-wtcg-slide>
@@ -298,7 +300,7 @@ const markupFor = (className, count) => {
       </figure>
     </li>`;
   const pagination =
-    count > 1
+    paginationEnabled && count > 1
       ? `\n  <div role="group" aria-label="Choose slide">\n    <ol data-wtcg-pagination>\n${Array.from({ length: Math.min(count, 4) }, (_, index) => `      <li><button data-wtcg-page type="button" aria-label="Slide ${index + 1}">${index + 1}</button></li>`).join('\n')}\n    </ol>\n  </div>`
       : '';
   return `<section class="${className}" data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">
@@ -329,15 +331,29 @@ const styleFor = (className) =>
 }
 
 .natural .photo-slide {
-  width: var(--asset-width);
+  width: 100%;
+  max-width: 28rem;
 }
 
-.natural [data-wtcg-slide]:nth-child(3n + 1) .photo-slide {
-  width: 18rem;
+.natural [data-wtcg-slide] {
+  transition: opacity 300ms ease;
 }
 
-.natural [data-wtcg-slide]:nth-child(3n + 2) .photo-slide {
-  width: 25rem;
+.natural [data-wtcg-track] {
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* MANDATORY: suppress the track during instant corrections and pointer drag. */
+.natural[data-wtcg-instant] [data-wtcg-track],
+.natural[data-wtcg-dragging] [data-wtcg-track] {
+  transition: none;
+}
+
+.natural[data-wtcg-dragging] [data-wtcg-slide],
+.natural[data-wtcg-instant] [data-wtcg-slide],
+.natural[data-wtcg-dragging] .photo-slide,
+.natural[data-wtcg-instant] .photo-slide {
+  transition: none;
 }`,
     responsive: `.responsive [data-wtcg-list] {
   --wtcg-slides: 1;
@@ -368,9 +384,10 @@ const styleFor = (className) =>
   border-radius: 0;
 }
 
-.demo-viewport {
+.demo-viewport > .demo-stage {
   width: 100vw;
-  margin-left: calc((1240px - 100vw) / 2);
+  max-width: 100vw;
+  margin-inline-start: calc(50% - 50vw);
 }`,
     'card-carousel': `.card-carousel {
   --wtcg-slide-gap: 10px;
@@ -404,6 +421,90 @@ const styleFor = (className) =>
   transition:
     transform 500ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 500ms ease;
+}
+
+.card-carousel [data-wtcg-track] {
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* MANDATORY: suppress the track during instant corrections and pointer drag. */
+.card-carousel[data-wtcg-dragging] [data-wtcg-track],
+.card-carousel[data-wtcg-instant] [data-wtcg-track],
+/* MANDATORY: suppress animated card properties in the same states. */
+.card-carousel[data-wtcg-dragging] .photo-slide,
+.card-carousel[data-wtcg-instant] .photo-slide {
+  transition: none;
+}`,
+    'focus-center': `.focus-center {
+  container-type: inline-size;
+  --focus-slide-width: clamp(240px, 31cqw, 380px);
+  --focus-gap: 25px;
+  --focus-active-scale: 1.1;
+  --focus-rest-scale: 0.9;
+  --wtcg-slide-gap: var(--focus-gap);
+  --wtcg-center-padding: 5vw;
+}
+
+.focus-center [data-wtcg-list] {
+  --wtcg-slides: 3;
+  --wtcg-slide-size: var(--focus-slide-width);
+  padding-block: 55px;
+  overflow: visible;
+}
+
+.focus-center [data-wtcg-slide] {
+  width: var(--focus-slide-width);
+  --focus-distance: min(var(--wtcg-slide-distance, 0), 1);
+  --focus-direction: clamp(-1, var(--wtcg-slide-offset, 0), 1);
+  transform: translateX(
+    calc(
+      var(--wtcg-slide-offset, 0) * (var(--focus-rest-scale) - 1) * var(--focus-slide-width) +
+        var(--focus-direction) * (var(--focus-active-scale) - var(--focus-rest-scale)) *
+          var(--focus-slide-width) / 2
+    )
+  );
+  transition: transform 300ms ease;
+}
+
+.focus-center .photo-slide {
+  width: 100%;
+  opacity: calc(1 - var(--focus-distance) * 0.25);
+  transform: scale(
+    calc(
+      var(--focus-active-scale) -
+        var(--focus-distance) * (var(--focus-active-scale) - var(--focus-rest-scale))
+    )
+  );
+  transform-origin: center;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
+}
+
+.focus-center [data-wtcg-track] {
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* MANDATORY: suppress the track during instant corrections and pointer drag. */
+.focus-center[data-wtcg-instant] [data-wtcg-track],
+.focus-center[data-wtcg-dragging] [data-wtcg-track] {
+  transition: none;
+}
+
+/* MANDATORY: suppress animated focus properties in the same states. */
+.focus-center[data-wtcg-dragging] [data-wtcg-slide],
+.focus-center[data-wtcg-instant] [data-wtcg-slide],
+.focus-center[data-wtcg-dragging] .photo-slide,
+.focus-center[data-wtcg-instant] .photo-slide {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-center [data-wtcg-track],
+  .focus-center [data-wtcg-slide],
+  .focus-center .photo-slide {
+    transition: none;
+  }
 }`,
     interactive: `.interactive [data-wtcg-list] {
   --wtcg-slides: 2;
@@ -453,13 +554,17 @@ const styleFor = (className) =>
     opacity 520ms ease;
 }
 
+/* MANDATORY: suppress the track during instant corrections and pointer drag. */
+.fan[data-wtcg-instant] [data-wtcg-track],
 .fan[data-wtcg-dragging] [data-wtcg-track],
-.fan[data-wtcg-instant] [data-wtcg-track] {
+/* MANDATORY: suppress animated card properties in the same states. */
+.fan[data-wtcg-dragging] .photo-slide,
+.fan[data-wtcg-instant] .photo-slide {
   transition: none;
 }`,
   })[className];
 const snippet = (className, options, count = 4) => ({
-  markup: markupFor(className, count),
+  markup: markupFor(className, count, Boolean(options.pagination)),
   styles: styleFor(className),
   script: formatOptions(options),
   count,
@@ -475,7 +580,7 @@ const demos = [
       focusOnSelect: true,
       initialSlide: 2,
     },
-    slides: DEMO_IMAGES,
+    slides: NATURAL_IMAGES,
   },
   {
     title: 'Responsive slide count',
@@ -493,6 +598,17 @@ const demos = [
     title: 'A stacked card carousel',
     className: 'card-carousel',
     options: fanOptions,
+    slides: LANDSCAPE_IMAGES,
+  },
+  {
+    title: 'Centered focus',
+    className: 'focus-center',
+    options: {
+      centerMode: true,
+      pagination: true,
+      drag: false,
+      focusOnSelect: true,
+    },
     slides: LANDSCAPE_IMAGES,
   },
   {
@@ -532,6 +648,7 @@ function FeatureFan() {
 
 const quickMarkup = `<section data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">\n  <div id="featured-carousel-slides" data-wtcg-list>\n    <ul data-wtcg-track>\n      <li data-wtcg-slide>First slide</li>\n      <li data-wtcg-slide>Second slide</li>\n      <li data-wtcg-slide>Third slide</li>\n    </ul>\n  </div>\n  <button data-wtcg-prev type="button">Previous</button>\n</section>`;
 const quickJs = `import { WtcGorditoCarousel } from '@wethegit/gordito-carousel';\nimport '@wethegit/gordito-carousel/wtc-gordito-carousel.css';\n\nconst carousel = new WtcGorditoCarousel(document.querySelector('[data-wtcg-carousel]'), {\n  pagination: true,\n});`;
+const installCommand = `npm install @wethegit/gordito-carousel`;
 const suppressCss = `.my-carousel {\n  [data-wtcg-track] { transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1); }\n\n  /* MANDATORY — suppress track transform during instant corrections */\n  &[data-wtcg-instant] [data-wtcg-track],\n  /* MANDATORY — suppress track transform during pointer drag */\n  &[data-wtcg-dragging] [data-wtcg-track] { transition: none; }\n}`;
 function Table({ headers, rows }) {
   return (
@@ -580,18 +697,15 @@ function Docs() {
       </aside>
       <div className="docs-body">
         <section id="quick-start">
-          <p className="kicker">Install / quick start</p>
-          <h2>Start with the contract.</h2>
-          <p>
-            The package entrypoint is <code>@wethegit/gordito-carousel</code>. The structural
-            stylesheet is available separately from{' '}
-            <code>@wethegit/gordito-carousel/wtc-gordito-carousel.css</code>.
-          </p>
-          <Snippet label="Quick start" language="JS">
-            {quickJs}
+          <h2>Quick start</h2>
+          <Snippet label="Install" language="SH">
+            {installCommand}
           </Snippet>
           <Snippet label="Required markup" language="HTML">
             {quickMarkup}
+          </Snippet>
+          <Snippet label="Start" language="JS">
+            {quickJs}
           </Snippet>
           <p>
             Options can also be set in markup. Programmatic settings are merged first, then{' '}
@@ -814,11 +928,6 @@ function Docs() {
             visible/current slides, center mode, drag capability, active drag, and non-animated
             transforms.
           </p>
-          <h3>Styling recipes</h3>
-          <Snippet
-            label="Centered live-drag emphasis"
-            language="CSS"
-          >{`.carousel [data-wtcg-list] { --wtcg-slides: 3; --wtcg-slide-size: auto; }\n.carousel [data-wtcg-slide] > * { opacity: calc(1 - min(var(--wtcg-slide-distance, 0), 2) * .25); transform: scale(calc(1 - min(var(--wtcg-slide-distance, 0), 2) * .1)); transition: opacity 240ms ease, transform 240ms ease; }\n.carousel [data-wtcg-center] > * { opacity: 1; transform: scale(1.08); }`}</Snippet>
         </section>
         <section id="infinite">
           <p className="kicker">Infinite looping</p>
@@ -964,7 +1073,6 @@ function App() {
       </header>
       <main id="top">
         <section className="identity">
-          <p className="kicker">WTC Gordito Carousel</p>
           <h1>
             WTC Gordito Carousel <span>🐽</span>
           </h1>

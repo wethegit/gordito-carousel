@@ -2,10 +2,11 @@
 
 A small vanilla carousel core with an explicit DOM contract. The library owns behavior, runtime state, and measurement. Authors own markup, semantics, layout styling, and animation.
 
-The package entrypoint is `@wethegit/gordito-carousel`. The structural stylesheet is
-available separately from `@wethegit/gordito-carousel/wtc-gordito-carousel.css`.
-
 ## Quick Start
+
+```sh
+npm install @wethegit/gordito-carousel
+```
 
 ```js
 import { WtcGorditoCarousel } from '@wethegit/gordito-carousel';
@@ -127,21 +128,6 @@ Arrows can live in the same list as pagination:
     </button>
   </li>
 </ol>
-```
-
-When arrows live inside pagination, style them as normal in-flow controls. The core CSS does not position arrows.
-
-```css
-[data-wtcg-pagination] {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-[data-wtcg-pagination] [data-wtcg-prev],
-[data-wtcg-pagination] [data-wtcg-next] {
-  position: static;
-}
 ```
 
 Core behavior for pagination:
@@ -303,43 +289,6 @@ Runtime slide variables written by JavaScript:
 | `[data-wtcg-draggable]`   | Core  | `[data-wtcg-carousel]` | Pointer dragging is enabled on the carousel. **Consumers who override the track transition MUST suppress it under this attribute (see CSS Model section).**                                                                            |
 | `[data-wtcg-dragging]`    | Core  | `[data-wtcg-carousel]` | Pointer drag is active on the carousel. Track transform must follow the pointer. **Consumers who override the track transition MUST suppress it under this attribute (see CSS Model section).**                                        |
 | `[data-wtcg-instant]`     | Core  | `[data-wtcg-carousel]` | Track transform must not animate. Set during initial layout, responsive refresh, and infinite-loop clone normalization. **Consumers who override the track transition MUST suppress it under this attribute (see CSS Model section).** |
-
-## Styling Recipes
-
-Full-width slides:
-
-```css
-.my-carousel [data-wtcg-list] {
-  --wtcg-slide-size: 100cqw;
-  overflow: hidden;
-}
-```
-
-Centered live-drag emphasis:
-
-```css
-.my-carousel {
-  --wtcg-center-padding: 2rem;
-}
-
-.carousel [data-wtcg-list] {
-  --wtcg-slides: 3;
-  --wtcg-slide-size: auto;
-}
-
-.carousel [data-wtcg-slide] > * {
-  opacity: calc(1 - min(var(--wtcg-slide-distance, 0), 2) * 0.25);
-  transform: scale(calc(1 - min(var(--wtcg-slide-distance, 0), 2) * 0.1));
-  transition:
-    opacity 240ms ease,
-    transform 240ms ease;
-}
-
-.carousel [data-wtcg-center] > * {
-  opacity: 1;
-  transform: scale(1.08);
-}
-```
 
 ## Infinite Looping
 
