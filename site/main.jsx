@@ -15,6 +15,7 @@ const IMAGES = [
   { id: 1074, title: 'Desert', place: 'Utah', w: 840, h: 1120 },
 ];
 const LANDSCAPE_IMAGES = [IMAGES[0], IMAGES[2], IMAGES[4], IMAGES[6]];
+const FULL_WIDTH_IMAGES = LANDSCAPE_IMAGES.map((image) => ({ ...image, w: 1200, h: 760 }));
 const imageUrl = (image) => `https://picsum.photos/id/${image.id}/${image.w}/${image.h}`;
 const fanOptions = {
   centerMode: true,
@@ -278,7 +279,7 @@ const demos = [
     'Break out of the reading column without changing the markup or API.',
     'viewport',
     { pagination: true, infinite: true },
-    LANDSCAPE_IMAGES,
+    FULL_WIDTH_IMAGES,
   ],
   [
     '07',
@@ -300,17 +301,13 @@ const demos = [
   ],
 ];
 function Demo({ item, number }) {
-  const [eyebrow, title, description, className, options, slides] = item;
+  const [eyebrow, title, _description, className, options, slides] = item;
   const code = snippet(className, options, slides.length);
   return (
     <article className="demo" id={`demo-${number}`}>
       <div className="demo-intro">
-        <div className="eyebrow">
-          <span>{number}</span>
-          {eyebrow}
-        </div>
+        <div className="eyebrow">{eyebrow}</div>
         <h2>{title}</h2>
-        <p>{description}</p>
       </div>
       <CarouselStage
         className={className}
@@ -806,14 +803,7 @@ function App() {
         <section className="gallery-head" id="demos">
           <div>
             <p className="kicker">The demo gallery</p>
-            <h2>
-              Eight ways to <i>move through</i> content.
-            </h2>
           </div>
-          <p>
-            Every example uses the same DOM contract. Resize, drag, tab, and inspect the snippets to
-            see the pieces in context.
-          </p>
         </section>
         {demos.map((item) => (
           <Demo key={item[0]} item={item} number={item[0]} />

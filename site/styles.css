@@ -428,7 +428,7 @@ main {
   padding: 6px 8px;
   border: 1px solid var(--line);
   color: #657080;
-  background: var(--color-yellow-10);
+  background: #e9e7e0;
 }
 .demo-stage {
   --wtcg-slide-gap: 16px;
@@ -440,8 +440,6 @@ main {
 .demo-stage [data-wtcg-list] {
   overflow: hidden;
   background: transparent;
-  outline: 1px solid var(--color-black-25);
-  outline-offset: 8px;
   border-radius: 4px;
 }
 .fan [data-wtcg-list],
@@ -849,6 +847,53 @@ footer {
   color: var(--muted);
   font-size: 0.8rem;
 }
+
+/* Keep the gallery quiet while each stage retains its own art direction. */
+.gallery-head {
+  padding-block: 90px 35px;
+}
+.gallery-head > div:empty {
+  display: none;
+}
+.demo-intro {
+  grid-template-columns: 1.1fr 2fr;
+}
+.demo-intro .eyebrow {
+  color: var(--orange);
+}
+.demo-jump {
+  justify-content: center;
+}
+.demo-jump .primary-cta,
+.demo-jump .secondary-cta {
+  width: 230px;
+  min-height: 54px;
+  justify-content: space-between;
+}
+.snippet {
+  background: #252b2c;
+}
+.snippet-head {
+  border-color: #465052;
+}
+.source-code {
+  background: #252b2c;
+  border-color: #465052;
+}
+.source-panel,
+.source-area {
+  border-color: #465052;
+}
+.source-area {
+  background: #171c1d;
+}
+.docs code {
+  background: #e9e7e0;
+  color: var(--ink);
+}
+.docs th {
+  background: #252b2c;
+}
 @container (min-width:42rem) {
   .responsive [data-wtcg-list] {
     --wtcg-slides: 2;
@@ -1185,7 +1230,7 @@ footer {
 }
 .docs code {
   color: var(--ink);
-  background: var(--color-yellow-10);
+  background: #e9e7e0;
   padding: 2px 4px;
   font: 0.82em var(--mono);
 }
