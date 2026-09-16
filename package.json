@@ -42,6 +42,9 @@
     "site:dev": "vite --config site/vite.config.js",
     "site:build": "vite build --config site/vite.config.js"
   },
+  "dependencies": {
+    "prism-react-renderer": "^2.4.1"
+  },
   "devDependencies": {
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^3.0.3",

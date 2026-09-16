@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Highlight } from 'prism-react-renderer';
 import { WtcGorditoCarousel, WTC_GORDITO_CAROUSEL_STATUS_TOKENS } from '../src/index.ts';
 import '../src/wtc-gordito-carousel.css';
 import './styles.css';
@@ -43,6 +44,30 @@ function CopyButton({ text }) {
     </button>
   );
 }
+const prismLanguage = (language) => {
+  if (language === 'HTML') return 'markup';
+  if (language === 'CSS') return 'css';
+  return 'javascript';
+};
+function CodeBlock({ text, language }) {
+  return (
+    <Highlight code={text} language={prismLanguage(language)}>
+      {({ tokens, getLineProps, getTokenProps }) => (
+        <pre className="code-pre">
+          <code>
+            {tokens.map((line, lineIndex) => (
+              <div {...getLineProps({ line, key: lineIndex })} key={lineIndex}>
+                {line.map((token, tokenIndex) => (
+                  <span {...getTokenProps({ token, key: tokenIndex })} key={tokenIndex} />
+                ))}
+              </div>
+            ))}
+          </code>
+        </pre>
+      )}
+    </Highlight>
+  );
+}
 function Snippet({ label, language, children }) {
   const text = String(children).trim();
   return (
@@ -52,9 +77,7 @@ function Snippet({ label, language, children }) {
         <span className="snippet-lang">{language}</span>
         <CopyButton text={text} />
       </div>
-      <pre>
-        <code>{text}</code>
-      </pre>
+      <CodeBlock text={text} language={language} />
     </div>
   );
 }
@@ -111,9 +134,7 @@ function SourceCode({ markup, styles, script }) {
             <span>{current[1]}</span>
             <CopyButton text={String(current[2]).trim()} />
           </div>
-          <pre>
-            <code>{String(current[2]).trim()}</code>
-          </pre>
+          <CodeBlock text={String(current[2]).trim()} language={current[1]} />
         </div>
       </div>
     </details>
@@ -149,14 +170,16 @@ function Slide({ image, index, total, interactive = false }) {
     >
       <figure
         className="photo-slide"
-        style={{ '--asset-width': `${Math.min(28, Math.max(15, (image.w / image.h) * 18))}rem` }}
+        style={{
+          '--asset-width': `${Math.min(28, Math.max(15, (image.w / image.h) * 18))}rem`,
+        }}
       >
         <img
           src={imageUrl(image)}
           width={image.w}
           height={image.h}
           alt={image.title}
-          loading={index < 2 ? 'eager' : 'lazy'}
+          loading="eager"
           draggable={false}
         />
         <figcaption>
@@ -167,17 +190,10 @@ function Slide({ image, index, total, interactive = false }) {
     </li>
   );
 }
-function Controls({ count, id, integrated = false }) {
+function Controls({ count }) {
   return (
     <div className="controls" role="group" aria-label="Choose slide">
       <ol data-wtcg-pagination>
-        {integrated && (
-          <li>
-            <button data-wtcg-prev type="button" aria-controls={id}>
-              ← Prev
-            </button>
-          </li>
-        )}
         {Array.from({ length: count }, (_, index) => (
           <li key={index}>
             <button data-wtcg-page type="button" aria-label={`Slide ${index + 1}`}>
@@ -185,13 +201,6 @@ function Controls({ count, id, integrated = false }) {
             </button>
           </li>
         ))}
-        {integrated && (
-          <li>
-            <button data-wtcg-next type="button" aria-controls={id}>
-              Next →
-            </button>
-          </li>
-        )}
       </ol>
     </div>
   );
@@ -203,7 +212,6 @@ function CarouselStage({ className, options, slides = DEMO_IMAGES, title, childr
   // `slides` is reserved for the image-data collection. Custom content belongs
   // in `children`, which is rendered after the carousel controls below.
   const imageSlides = Array.isArray(slides) ? slides : DEMO_IMAGES;
-  const integratedControls = className === 'infinite';
   useEffect(() => {
     const carousel = new WtcGorditoCarousel(ref.current, options);
     return () => carousel.destroy();
@@ -235,31 +243,25 @@ function CarouselStage({ className, options, slides = DEMO_IMAGES, title, childr
           ))}
         </ul>
       </div>
-      {!integratedControls && (
-        <button
-          className="stage-arrow prev"
-          data-wtcg-prev
-          type="button"
-          aria-controls={listId}
-          aria-label="Previous slide"
-        >
-          ←
-        </button>
-      )}
-      {!integratedControls && (
-        <button
-          className="stage-arrow next"
-          data-wtcg-next
-          type="button"
-          aria-controls={listId}
-          aria-label="Next slide"
-        >
-          →
-        </button>
-      )}
-      {options.pagination && (
-        <Controls id={listId} count={imageSlides.length} integrated={integratedControls} />
-      )}
+      <button
+        className="stage-arrow prev"
+        data-wtcg-prev
+        type="button"
+        aria-controls={listId}
+        aria-label="Previous slide"
+      >
+        ←
+      </button>
+      <button
+        className="stage-arrow next"
+        data-wtcg-next
+        type="button"
+        aria-controls={listId}
+        aria-label="Next slide"
+      >
+        →
+      </button>
+      {options.pagination && <Controls count={imageSlides.length} />}
       <p className="sr-only" data-wtcg-status aria-live="polite" aria-atomic="true">
         Slide {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.CURRENT} of{' '}
         {WTC_GORDITO_CAROUSEL_STATUS_TOKENS.TOTAL}
@@ -268,31 +270,212 @@ function CarouselStage({ className, options, slides = DEMO_IMAGES, title, childr
     </div>
   );
 }
+const formatOptions = (options) => {
+  const entries = Object.entries(options);
+  if (!entries.length) return 'const carousel = new WtcGorditoCarousel(element);';
+  return `const carousel = new WtcGorditoCarousel(element, {\n${entries.map(([key, value]) => `  ${key}: ${JSON.stringify(value)},`).join('\n')}\n});`;
+};
+const markupFor = (className, count) => {
+  const slide =
+    className === 'interactive'
+      ? `    <li class="story-slide" data-wtcg-slide>
+      <div>
+        <h3>Slide title</h3>
+        <p>Slide content</p>
+        <div class="slide-actions">
+          <a href="#docs">Read more</a>
+          <button type="button">Save slide</button>
+        </div>
+      </div>
+    </li>`
+      : `    <li data-wtcg-slide>
+      <figure class="photo-slide">
+        <img src="image.jpg" alt="Slide title" />
+        <figcaption>
+          <strong>Slide title</strong>
+          <em>Place</em>
+        </figcaption>
+      </figure>
+    </li>`;
+  const pagination =
+    count > 1
+      ? `\n  <div role="group" aria-label="Choose slide">\n    <ol data-wtcg-pagination>\n${Array.from({ length: Math.min(count, 4) }, (_, index) => `      <li><button data-wtcg-page type="button" aria-label="Slide ${index + 1}">${index + 1}</button></li>`).join('\n')}\n    </ol>\n  </div>`
+      : '';
+  return `<section class="${className}" data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">
+  <div data-wtcg-list>
+    <ul data-wtcg-track>
+${slide}
+    </ul>
+  </div>
+  <button data-wtcg-prev type="button" aria-label="Previous slide">
+    Previous
+  </button>
+  <button data-wtcg-next type="button" aria-label="Next slide">
+    Next
+  </button>${pagination}
+</section>`;
+};
+const styleFor = (className) =>
+  ({
+    basic: `.basic [data-wtcg-list] {
+  --wtcg-slides: 1;
+  --wtcg-slide-size: 100cqw;
+  border: 1px solid var(--line);
+}`,
+    natural: `.natural [data-wtcg-list] {
+  --wtcg-slides: 3;
+  --wtcg-slide-size: auto;
+  --wtcg-center-padding: 7vw;
+}
+
+.natural .photo-slide {
+  width: var(--asset-width);
+}
+
+.natural [data-wtcg-slide]:nth-child(3n + 1) .photo-slide {
+  width: 18rem;
+}
+
+.natural [data-wtcg-slide]:nth-child(3n + 2) .photo-slide {
+  width: 25rem;
+}`,
+    responsive: `.responsive [data-wtcg-list] {
+  --wtcg-slides: 1;
+  --wtcg-slide-size: 100cqw;
+  padding-block: 2px 14px;
+}
+
+@container (min-width: 42rem) {
+  .responsive [data-wtcg-list] {
+    --wtcg-slides: 2;
+    --wtcg-slide-size: calc((100cqw - var(--wtcg-slide-gap)) / 2);
+  }
+}
+
+@container (min-width: 64rem) {
+  .responsive [data-wtcg-list] {
+    --wtcg-slides: 4;
+    --wtcg-slide-size: calc((100cqw - var(--wtcg-slide-gap) * 3) / 4);
+  }
+}`,
+    viewport: `.viewport {
+  --wtcg-slide-gap: 22px;
+}
+
+.viewport [data-wtcg-list] {
+  --wtcg-slides: 1;
+  --wtcg-slide-size: 100cqw;
+  border-radius: 0;
+}
+
+.demo-viewport {
+  width: 100vw;
+  margin-left: calc((1240px - 100vw) / 2);
+}`,
+    'card-carousel': `.card-carousel {
+  --wtcg-slide-gap: 10px;
+  --card-width: min(65vw, 20rem);
+  --hand-count: 8;
+  --hand-slot-gap: 20vw;
+  --hand-slot: calc(var(--wtcg-slide-offset, 0) + (var(--hand-count) - 1) / 2);
+  --hand-distance: min(var(--wtcg-slide-distance, 0), 4);
+  --hand-x: calc((var(--hand-slot) - (var(--hand-count) - 1) / 2) * var(--hand-slot-gap));
+  --card-depth: 0.07;
+}
+
+.card-carousel [data-wtcg-list] {
+  --wtcg-slides: 1;
+  --wtcg-slide-size: var(--card-width);
+  padding-block: 55px 90px;
+  overflow: hidden;
+}
+
+.card-carousel .photo-slide {
+  position: relative;
+  border: 1px solid var(--color-black-25);
+  border-radius: 8px;
+  box-shadow: 0 22px 32px #1018202b;
+  transform: translateX(calc(var(--wtcg-slide-offset, 0) * -1 * var(--card-width)))
+    translateY(calc(min(var(--wtcg-slide-distance, 0), 4) * 7px))
+    rotate(calc(var(--wtcg-slide-offset, 0) * 2deg))
+    scale(calc(1 - min(var(--wtcg-slide-distance, 0), 4) * var(--card-depth)));
+  opacity: calc(1 - min(var(--wtcg-slide-distance, 0), 4) * 0.12);
+  z-index: calc(50 - var(--wtcg-slide-distance, 0));
+  transition:
+    transform 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 500ms ease;
+}`,
+    interactive: `.interactive [data-wtcg-list] {
+  --wtcg-slides: 2;
+  --wtcg-slide-size: calc((100cqw - var(--wtcg-slide-gap)) / 2);
+  overflow: visible;
+}
+
+.story-slide {
+  min-height: 340px;
+  background: var(--ink);
+  color: white;
+}
+
+.slide-actions a,
+.slide-actions button {
+  border: 1px solid #758095;
+}`,
+    fan: `.fan {
+  --wtcg-slide-gap: 0;
+  --wtcg-center-padding: 8vw;
+  --hand-card-width: min(65vw, 20rem);
+  --hand-count: 8;
+  --hand-slot-gap: 20vw;
+  --hand-slot: calc(var(--wtcg-slide-offset, 0) + (var(--hand-count) - 1) / 2);
+  --hand-distance: min(var(--wtcg-slide-distance, 0), 3);
+  --hand-x: calc((var(--hand-slot) - (var(--hand-count) - 1) / 2) * var(--hand-slot-gap));
+}
+
+.fan [data-wtcg-list] {
+  --wtcg-slides: 3;
+  --wtcg-slide-size: var(--hand-card-width);
+  padding-block: 45px 70px;
+  overflow: visible;
+}
+
+.fan [data-wtcg-track] {
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.feature-fan .fan .photo-slide {
+  border: 1px solid var(--line);
+  transform: translateX(var(--hand-x)) translateY(calc(var(--hand-distance) * 12px))
+    rotate(calc(var(--wtcg-slide-offset, 0) * 8deg));
+  opacity: calc(1 - var(--hand-distance) * 0.16);
+  transition:
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 520ms ease;
+}
+
+.fan[data-wtcg-dragging] [data-wtcg-track],
+.fan[data-wtcg-instant] [data-wtcg-track] {
+  transition: none;
+}`,
+  })[className];
 const snippet = (className, options, count = 4) => ({
-  markup: `<section class="${className}" data-wtcg-carousel>\n  <div data-wtcg-list><ul data-wtcg-track>\n    <li data-wtcg-slide>Slide content</li>\n  </ul></div>\n  <button data-wtcg-prev type="button">Previous</button>\n  <button data-wtcg-next type="button">Next</button>\n</section>`,
-  styles: `.${className} [data-wtcg-list] { --wtcg-slides: ${className === 'responsive' ? 1 : 3}; --wtcg-slide-size: ${className === 'natural' ? 'auto' : '100cqw'}; }`,
-  script: `const carousel = new WtcGorditoCarousel(element, ${JSON.stringify(options)});`,
+  markup: markupFor(className, count),
+  styles: styleFor(className),
+  script: formatOptions(options),
   count,
 });
 const demos = [
-  { title: 'Bare minimum basics', className: 'basic', options: {}, slides: LANDSCAPE_IMAGES },
+  { title: 'Basic', className: 'basic', options: {}, slides: LANDSCAPE_IMAGES },
   {
     title: 'Different image sizes',
     className: 'natural',
-    options: { centerMode: true, drag: 'free', focusOnSelect: true, initialSlide: 2 },
+    options: {
+      centerMode: true,
+      drag: 'free',
+      focusOnSelect: true,
+      initialSlide: 2,
+    },
     slides: DEMO_IMAGES,
-  },
-  {
-    title: 'Live drag emphasis',
-    className: 'center',
-    options: { centerMode: true, pagination: true, drag: 'free', focusOnSelect: true },
-    slides: DEMO_IMAGES,
-  },
-  {
-    title: 'Arrows inside pagination',
-    className: 'infinite',
-    options: { pagination: true, infinite: true },
-    slides: LANDSCAPE_IMAGES,
   },
   {
     title: 'Responsive slide count',
@@ -342,19 +525,12 @@ function FeatureFan() {
   return (
     <section className="feature-fan" aria-label="Featured live demo">
       <CarouselStage className="fan" options={fanOptions} slides={LANDSCAPE_IMAGES} />
-      <div className="feature-note">
-        <strong>A fan that follows the pointer</strong>
-        <p>
-          Cards keep their own angle and depth while the track follows the drag. Release to settle
-          on the nearest card.
-        </p>
-      </div>
       <SourceCode markup={code.markup} styles={code.styles} script={code.script} />
     </section>
   );
 }
 
-const quickMarkup = `<section data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">\n  <div id="featured-carousel-slides" data-wtcg-list>\n    <ul data-wtcg-track>\n      <li data-wtcg-slide>First slide</li>\n      <li data-wtcg-slide>Second slide</li>\n      <li data-wtcg-slide>Third slide</li>\n    </ul>\n  </div>\n</section>`;
+const quickMarkup = `<section data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">\n  <div id="featured-carousel-slides" data-wtcg-list>\n    <ul data-wtcg-track>\n      <li data-wtcg-slide>First slide</li>\n      <li data-wtcg-slide>Second slide</li>\n      <li data-wtcg-slide>Third slide</li>\n    </ul>\n  </div>\n  <button data-wtcg-prev type="button">Previous</button>\n</section>`;
 const quickJs = `import { WtcGorditoCarousel } from '@wethegit/gordito-carousel';\nimport '@wethegit/gordito-carousel/wtc-gordito-carousel.css';\n\nconst carousel = new WtcGorditoCarousel(document.querySelector('[data-wtcg-carousel]'), {\n  pagination: true,\n});`;
 const suppressCss = `.my-carousel {\n  [data-wtcg-track] { transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1); }\n\n  /* MANDATORY — suppress track transform during instant corrections */\n  &[data-wtcg-instant] [data-wtcg-track],\n  /* MANDATORY — suppress track transform during pointer drag */\n  &[data-wtcg-dragging] [data-wtcg-track] { transition: none; }\n}`;
 function Table({ headers, rows }) {
@@ -491,11 +667,6 @@ function Docs() {
             <code>aria-current="true"</code>. Extra buttons use native <code>hidden</code> when
             fewer positions are reachable.
           </p>
-          <Snippet label="Arrows inside pagination" language="HTML">
-            {
-              '<ol data-wtcg-pagination>\n  <li><button data-wtcg-prev type="button">Previous</button></li>\n  <li><button data-wtcg-page type="button" aria-label="Slide 1">1</button></li>\n  <li><button data-wtcg-next type="button">Next</button></li>\n</ol>'
-            }
-          </Snippet>
           <h3>Status</h3>
           <p>
             <code>[data-wtcg-status]</code> is an optional template. The author owns live-region
