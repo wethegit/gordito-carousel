@@ -436,6 +436,7 @@ const styleFor = (className) =>
   transition: none;
 }`,
     'focus-center': `.focus-center {
+  container-type: inline-size;
   --focus-slide-width: clamp(240px, 31cqw, 380px);
   --focus-gap: 25px;
   --focus-active-scale: 1.1;
