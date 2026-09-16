@@ -1,6 +1,6 @@
 {
   "name": "@wethegit/gordito-carousel",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A robust carousel with support for infinite slides and touch.",
   "license": "MIT",
   "repository": {
