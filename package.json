@@ -36,6 +36,7 @@
     "check": "npm run format:check && npm run lint && npm run typecheck",
     "changeset": "changeset",
     "version": "changeset version",
+    "release": "npm run build && changeset publish",
     "prepare": "husky",
     "site:dev": "vite --config site/vite.config.js",
     "site:build": "vite build --config site/vite.config.js"
