@@ -1,5 +1,11 @@
 # @wethegit/gordito-carousel
 
+## 1.0.1
+
+### Patch Changes
+
+- [#3](https://github.com/wethegit/gordito-carousel/pull/3) [`1e1a8af`](https://github.com/wethegit/gordito-carousel/commit/1e1a8af99c28b32635a59b2af5383cc9d236ac0f) Thanks [@liamegan](https://github.com/liamegan)! - Move `prism-react-renderer` to `devDependencies`. It is only used by the demo site, so installing the carousel no longer pulls it in.
+
 ## 1.0.0
 
 ### Major Changes
