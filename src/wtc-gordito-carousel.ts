@@ -1456,27 +1456,34 @@ export class WtcGorditoCarousel {
     this.clearDragPreview();
     this.updateSlideClasses();
 
-    if (Math.abs(mainDelta) >= minSwipe) {
-      const forward = mainDelta < 0;
-
+    const forward = mainDelta < 0;
+    const dispatchSwipe = () =>
       dispatch(this.slider, 'swipe', {
         carousel: this,
         direction: forward ? 'next' : 'previous',
       });
 
-      if (this.dragMode === 'free') {
-        // In peek/center layouts, users can drag across several visible slides.
-        // Free drag honors the actual release position instead of forcing
-        // every swipe through the fixed `--wtcg-scroll` step.
-        const targetTrackIndex = this.getTrackIndexForOffset(releaseOffset);
-        const targetOriginal = targetTrackIndex - this.cloneCount;
-        const nextSlide = this.options.infinite
-          ? modulo(targetOriginal, this.slideCount)
-          : targetOriginal;
+    if (this.dragMode === 'free' && this.pointer.moved) {
+      // In peek/center layouts, users can drag across several visible slides.
+      // Free drag honors the actual release position instead of forcing
+      // every swipe through the fixed `--wtcg-scroll` step. The swipe threshold
+      // doesn't apply here: it's relative to the list width, which can be
+      // wider than a slide, and would snap back past a closer neighbour.
+      const targetTrackIndex = this.getTrackIndexForOffset(releaseOffset);
+      const targetOriginal = targetTrackIndex - this.cloneCount;
+      const nextSlide = this.options.infinite
+        ? modulo(targetOriginal, this.slideCount)
+        : targetOriginal;
+      const changed = nextSlide !== this.currentSlide;
 
-        if (nextSlide === this.currentSlide) this.runPositionChange(false);
-        else this.changeSlide(targetOriginal);
-      } else if (forward) this.next();
+      if (changed || Math.abs(mainDelta) >= minSwipe) dispatchSwipe();
+
+      if (changed) this.changeSlide(targetOriginal);
+      else this.runPositionChange(false);
+    } else if (Math.abs(mainDelta) >= minSwipe) {
+      dispatchSwipe();
+
+      if (forward) this.next();
       else this.prev();
     } else {
       this.runPositionChange(false);

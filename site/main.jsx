@@ -646,6 +646,43 @@ function FeatureFan() {
   );
 }
 
+// Standalone demos with a page of their own. Each href is relative so it
+// resolves under the site's base path.
+const MORE_DEMOS = [
+  {
+    href: 'path-carousel/',
+    title: 'Along the way',
+    description: (
+      <>
+        Slides travel along a winding road with CSS <code>offset-path</code>. The carousel still
+        does the snapping; the track is cancelled out so it only acts as a positioning origin.
+      </>
+    ),
+  },
+];
+function MoreDemos() {
+  return (
+    <section className="demo demo-more" id="more" aria-labelledby="more-title">
+      <div className="demo-intro">
+        <h2 id="more-title">More</h2>
+        <p>Other, less general demos that each get a page of their own.</p>
+      </div>
+      <dl className="more-list">
+        {MORE_DEMOS.map(({ href, title, description }) => (
+          <div className="more-item" key={href}>
+            <dt>
+              <a href={href}>
+                {title} <span aria-hidden="true">→</span>
+              </a>
+            </dt>
+            <dd>{description}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 const quickMarkup = `<section data-wtcg-carousel aria-roledescription="carousel" aria-label="Featured items">\n  <div id="featured-carousel-slides" data-wtcg-list>\n    <ul data-wtcg-track>\n      <li data-wtcg-slide>First slide</li>\n      <li data-wtcg-slide>Second slide</li>\n      <li data-wtcg-slide>Third slide</li>\n    </ul>\n  </div>\n  <button data-wtcg-prev type="button">Previous</button>\n</section>`;
 const quickJs = `import { WtcGorditoCarousel } from '@wethegit/gordito-carousel';\nimport '@wethegit/gordito-carousel/wtc-gordito-carousel.css';\n\nconst carousel = new WtcGorditoCarousel(document.querySelector('[data-wtcg-carousel]'), {\n  pagination: true,\n});`;
 const installCommand = `npm install @wethegit/gordito-carousel`;
@@ -1064,6 +1101,7 @@ function App() {
         </a>
         <nav>
           <a href="#demos">Demos</a>
+          <a href="#more">More demos</a>
           <a href="#docs">Docs</a>
           <a href="#contract">DOM contract</a>
           <a className="github" href="https://github.com/wethegit/gordito-carousel">
@@ -1099,6 +1137,7 @@ function App() {
         {demos.map((item) => (
           <Demo key={item.className} item={item} />
         ))}
+        <MoreDemos />
         <Docs />
       </main>
       <footer>
