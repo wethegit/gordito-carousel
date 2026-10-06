@@ -319,7 +319,7 @@ new WtcGorditoCarousel(element, {
   initialSlide: 0,
   slide: '',
   touchThreshold: 5,
-  waitForAnimate: true,
+  waitForAnimate: false,
 });
 ```
 
@@ -337,7 +337,7 @@ new WtcGorditoCarousel(element, {
 | `initialSlide`   | `number`                           | Zero-based initial original slide index.                                                                                           |
 | `slide`          | `string`                           | Optional selector to narrow which direct `[data-wtcg-slide]` children participate.                                                 |
 | `touchThreshold` | `number`                           | Swipe threshold as a fraction of carousel width. `5` means one-fifth of the width.                                                 |
-| `waitForAnimate` | `boolean`                          | Ignore new navigation requests while a transition is in progress.                                                                  |
+| `waitForAnimate` | `boolean`                          | Block navigation while a transition runs. When `false` (default), new requests redirect the moving track.                          |
 
 ## Methods
 
