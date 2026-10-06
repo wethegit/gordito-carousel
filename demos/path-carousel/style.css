@@ -1,0 +1,249 @@
+@import url('https://cdn.jsdelivr.net/npm/@wethegit/gordito-carousel@1/dist/wtc-gordito-carousel.css');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500&display=swap');
+
+/*
+ * Registering the runtime offset lets it transition. Dragging writes fractional
+ * offsets on every pointer move; arrows, clicks, and releases write whole numbers,
+ * and this transition fills in the frames between them, so everything derived
+ * from the offset moves the same way whether you drag or click.
+ */
+@property --wtcg-slide-offset {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  --paper: #f1e9da;
+  --ink: #2a241d;
+  --muted: #6f6556;
+  --asphalt: #3a342e;
+  --paint: #f2cf73;
+  --card: #fffdf8;
+  --move: 650ms;
+  --ease: cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.trip-header {
+  max-width: 40rem;
+  padding: clamp(1.5rem, 5vw, 3.5rem) 1rem 0;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.trip-kicker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.trip-header h1 {
+  margin: 0.3rem 0 0.6rem;
+  font-family: Fraunces, Georgia, serif;
+  font-size: clamp(2.2rem, 7vw, 4rem);
+  line-height: 1;
+}
+
+.trip-lede {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+ * The road
+ * ------------------------------------------------------------------------- */
+
+.road {
+  /* Whole pixels: the core measures slides with offsetWidth, which rounds. */
+  --card-w: round(clamp(130px, 18vw, 220px), 1px);
+  --spacing: 12%;
+  --wtcg-slides: 5;
+  --wtcg-slide-size: var(--card-w);
+}
+
+.road-view {
+  /* 100cqw below is the width of this list, which center mode offsets by. */
+  container-type: inline-size;
+  height: clamp(440px, 68svh, 720px);
+  overflow: hidden;
+}
+
+.road-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.road-asphalt,
+.road-lines {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.road-asphalt {
+  stroke: var(--asphalt);
+  stroke-width: clamp(28px, 4vw, 48px);
+}
+
+.road-lines {
+  stroke: var(--paint);
+  stroke-width: 3;
+  stroke-dasharray: 18 16;
+}
+
+.road-track {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transition: transform var(--move) var(--ease);
+}
+
+/*
+ * Every slide is absolutely positioned at the track origin, then sent along the
+ * road with offset-path. `--road` is a path() written by script.js to match the
+ * list's size.
+ */
+.stop {
+  --distance: max(var(--wtcg-slide-offset), -1 * var(--wtcg-slide-offset));
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: calc(100 - var(--distance) * 10);
+
+  offset-path: var(--road);
+  offset-distance: calc(50% + var(--wtcg-slide-offset) * var(--spacing));
+  offset-anchor: 50% 50%;
+  offset-rotate: 0deg;
+
+  /*
+   * The core still translates the track as if the slides sat in a row. This
+   * cancels that out so the track is a positioning origin and nothing more:
+   * each slide's row position minus the track's centered position.
+   */
+  translate: calc(
+      (var(--wtcg-slide-render-index) - var(--wtcg-slide-offset)) * var(--card-w) -
+        (100cqw - var(--card-w)) / 2
+    )
+    0;
+
+  /* `transform` applies before the offset, so these act around the card itself. */
+  transform: rotate(calc(var(--wtcg-slide-offset) * 6deg))
+    scale(calc(1 - min(var(--distance), 3) * 0.14));
+  opacity: clamp(0, 3.4 - var(--distance), 1);
+
+  /* Same duration and easing as the track so the cancellation stays exact. */
+  transition: --wtcg-slide-offset var(--move) var(--ease);
+}
+
+/*
+ * MANDATORY: suppress the track during instant corrections and pointer drag.
+ * The slide offset has to snap in the same states or it would drift from the
+ * track, and infinite-loop corrections would visibly spin every slide.
+ */
+.road[data-wtcg-instant] .road-track,
+.road[data-wtcg-dragging] .road-track,
+.road[data-wtcg-instant] .stop,
+.road[data-wtcg-dragging] .stop {
+  transition: none;
+}
+
+.postcard {
+  margin: 0;
+  padding: 0.5rem 0.5rem 0;
+  background: var(--card);
+  border-radius: 3px;
+  box-shadow:
+    0 1px 2px rgb(42 36 29 / 0.2),
+    0 12px 28px -8px rgb(42 36 29 / 0.45);
+}
+
+.postcard img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #d8cdb8;
+}
+
+.postcard figcaption {
+  padding: 0.55rem 0.1rem 0.65rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  opacity: clamp(0, 1 - var(--distance) * 1.5, 1);
+}
+
+.postcard strong {
+  display: block;
+  color: var(--ink);
+  font-family: Fraunces, Georgia, serif;
+  font-size: 1.05rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Controls
+ * ------------------------------------------------------------------------- */
+
+.road-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem 2.5rem;
+}
+
+.road-controls p {
+  min-width: 7rem;
+  margin: 0;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.road-controls button {
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font:
+    500 0.95rem Inter,
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+
+.road-controls button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.road-controls button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .road-track,
+  .stop {
+    transition: none;
+  }
+}
