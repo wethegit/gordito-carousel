@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gordito — Split-flap board</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./script.js"></script>
+  </head>
+  <body>
+    <main class="station">
+      <header class="station-header">
+        <p class="station-kicker">Gordito carousel · split-flap</p>
+        <h1>Departures</h1>
+        <p class="station-lede">
+          Every character is its own carousel. Changing the board just sets a target per cell and
+          calls <code>next()</code> after each <code>wtcg:afterChange</code> until it gets there.
+        </p>
+        <p>
+          <a href="https://www.npmjs.com/package/@wethegit/gordito-carousel"
+            >Gordito carousel on npm</a
+          >
+        </p>
+      </header>
+
+      <section class="board" aria-labelledby="board-label">
+        <h2 class="sr-only" id="board-label">Departure board</h2>
+        <div class="board-head" aria-hidden="true">
+          <span>Destination</span>
+          <span>Time</span>
+        </div>
+        <div class="board-row" aria-hidden="true"></div>
+        <p class="sr-only" aria-live="polite" aria-atomic="true" data-board-text></p>
+      </section>
+
+      <form class="board-form">
+        <label class="sr-only" for="board-input">Board message</label>
+        <input
+          id="board-input"
+          name="message"
+          maxlength="16"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Type up to 16 characters"
+        />
+        <button type="submit">Flip</button>
+        <button class="sound-toggle" type="button" aria-pressed="false" data-sound-toggle>
+          Sound
+        </button>
+      </form>
+
+      <div class="board-presets" aria-label="Preset departures" role="group"></div>
+    </main>
+  </body>
+</html>

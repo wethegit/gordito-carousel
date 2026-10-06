@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gordito — Along the way</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./script.js"></script>
+  </head>
+  <body>
+    <!-- CodePen: copy everything inside <body> into the HTML pane. -->
+    <main class="trip">
+      <header class="trip-header">
+        <p class="trip-kicker">Gordito carousel · motion path</p>
+        <h1>Along the way</h1>
+        <p class="trip-lede">
+          Drag the road, click a nearby stop, or use the buttons. The carousel still does the
+          snapping; CSS <code>offset-path</code> decides where each slide sits.
+        </p>
+      </header>
+
+      <section
+        class="road"
+        data-wtcg-carousel
+        aria-roledescription="carousel"
+        aria-label="Road trip stops"
+      >
+        <div class="road-view" id="road-stops" data-wtcg-list>
+          <svg class="road-svg" aria-hidden="true" focusable="false">
+            <path class="road-asphalt" />
+            <path class="road-lines" />
+          </svg>
+
+          <ol class="road-track" data-wtcg-track>
+            <li class="stop" data-wtcg-slide>
+              <figure class="postcard">
+                <img
+                  src="https://picsum.photos/id/1015/480/360"
+                  alt="A river winding through a steep green valley"
+                  width="480"
+                  height="360"
+                  draggable="false"
+                />
+                <figcaption><strong>Fjord lookout</strong> Norway</figcaption>
+              </figure>
+            </li>
+            <li class="stop" data-wtcg-slide>
+              <figure class="postcard">
+                <img
+                  src="https://picsum.photos/id/1036/480/360"
+                  alt="Snow-covered peaks under a pale sky"
+                  width="480"
+                  height="360"
+                  draggable="false"
+                />
+                <figcaption><strong>Snow line</strong> The Alps</figcaption>
+              </figure>
+            </li>
+            <li class="stop" data-wtcg-slide>
+              <figure class="postcard">
+                <img
+                  src="https://picsum.photos/id/1040/480/360"
+                  alt="A castle on a forested hillside"
+                  width="480"
+                  height="360"
+                  draggable="false"
+                />
+                <figcaption><strong>Castle stop</strong> Bavaria</figcaption>
+              </figure>
+            </li>
+            <li class="stop" data-wtcg-slide>
+              <figure class="postcard">
+                <img
+                  src="https://picsum.photos/id/1025/480/360"
+                  alt="A pug wrapped in a blanket"
+                  width="480"
+                  height="360"
+                  draggable="false"
+                />
+                <figcaption><strong>Co-pilot</strong> Back seat</figcaption>
+              </figure>
+            </li>
+            <li class="stop" data-wtcg-slide>
+              <figure class="postcard">
+                <img
+                  src="https://picsum.photos/id/1043/480/360"
+                  alt="Pine trees and a river beneath granite cliffs"
+                  width="480"
+                  height="360"
+                  draggable="false"
+                />
+                <figcaption><strong>Valley floor</strong> Yosemite</figcaption>
+              </figure>
+            </li>
+            <li class="stop" data-wtcg-slide>
+              <figure class="postcard">
+                <img
+                  src="https://picsum.photos/id/1050/480/360"
+                  alt="Rocky sea stacks in turquoise water"
+                  width="480"
+                  height="360"
+                  draggable="false"
+                />
+                <figcaption><strong>Sea stacks</strong> The coast</figcaption>
+              </figure>
+            </li>
+            <li class="stop" data-wtcg-slide>
+              <figure class="postcard">
+                <img
+                  src="https://picsum.photos/id/1067/480/360"
+                  alt="A city skyline at sunset"
+                  width="480"
+                  height="360"
+                  draggable="false"
+                />
+                <figcaption><strong>City lights</strong> Downtown</figcaption>
+              </figure>
+            </li>
+            <li class="stop" data-wtcg-slide>
+              <figure class="postcard">
+                <img
+                  src="https://picsum.photos/id/1074/480/360"
+                  alt="A lion resting in dry grass"
+                  width="480"
+                  height="360"
+                  draggable="false"
+                />
+                <figcaption><strong>Safari detour</strong> Somewhere hot</figcaption>
+              </figure>
+            </li>
+          </ol>
+        </div>
+
+        <div class="road-controls">
+          <button
+            data-wtcg-prev
+            type="button"
+            aria-controls="road-stops"
+            aria-label="Previous stop"
+          >
+            ← Back
+          </button>
+          <p data-wtcg-status aria-live="polite" aria-atomic="true">Stop {current} of {total}</p>
+          <button data-wtcg-next type="button" aria-controls="road-stops" aria-label="Next stop">
+            Onward →
+          </button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

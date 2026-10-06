@@ -1,0 +1,319 @@
+@import url('https://cdn.jsdelivr.net/npm/@wethegit/gordito-carousel@1/dist/wtc-gordito-carousel.css');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=Inter:wght@400;500&display=swap');
+
+/*
+ * Registering the runtime offset lets it transition. The flap angles below are
+ * derived from it, so one transitioned number drives the whole flip.
+ */
+@property --wtcg-slide-offset {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  --bg: #0f0f10;
+  --ink: #ece7dc;
+  --muted: #8d877c;
+  --panel-top: #262628;
+  --panel-bottom: #1e1e20;
+  --accent: #f3c440;
+  /* Whole pixels: the core measures slides with offsetWidth, which rounds. */
+  --cell-w: round(clamp(1.1rem, 5.2vw, 3.4rem), 1px);
+  --cell-h: calc(var(--cell-w) * 1.45);
+  --cell-gap: calc(var(--cell-w) * 0.08);
+  /*
+   * How far to raise characters inside the cell. Barlow Condensed has more
+   * space below its capitals than above, so line-height centering sits low.
+   */
+  --glyph-lift: calc(var(--cell-h) * 0.035);
+  /* Fallback only: script.js sets --flip on each cell per step, by distance. */
+  --flip: 350ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: radial-gradient(ellipse at 50% 0%, #26262a, var(--bg) 70%);
+  color: var(--ink);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.station {
+  display: grid;
+  justify-items: center;
+  gap: 2rem;
+  padding: clamp(1.5rem, 5vw, 3.5rem) 1rem 3rem;
+}
+
+.station-header {
+  max-width: 40rem;
+  text-align: center;
+}
+
+.station-kicker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.station-header h1 {
+  margin: 0.3rem 0 0.6rem;
+  color: var(--accent);
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-size: clamp(2.4rem, 8vw, 4.5rem);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.station-lede {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.station-lede code {
+  color: var(--ink);
+}
+
+.board {
+  padding: calc(var(--cell-w) * 0.35);
+  border-radius: 8px;
+  background: #0a0a0b;
+  box-shadow:
+    inset 0 0 0 1px #2c2c2f,
+    0 30px 60px -20px rgb(0 0 0 / 0.8);
+}
+
+.board-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.1rem 0.5rem;
+  color: var(--accent);
+  font-size: clamp(0.6rem, 1.6vw, 0.8rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.board-row {
+  display: flex;
+  gap: var(--cell-gap);
+}
+
+.flap {
+  --wtcg-slide-size: var(--cell-w);
+  --wtcg-slides: 3;
+
+  width: var(--cell-w);
+  height: var(--cell-h);
+  isolation: isolate;
+}
+
+/* The split line across the middle of the cell. */
+.flap::after {
+  content: '';
+  position: absolute;
+  inset: calc(50% - 1px) 0 auto;
+  z-index: 1;
+  height: 2px;
+  background: #0a0a0b;
+}
+
+.flap-list,
+.flap-track,
+.flap-char {
+  height: 100%;
+}
+
+.flap-list {
+  overflow: clip;
+  overflow-clip-margin: calc(var(--cell-w) * 0.5);
+}
+
+.flap-track {
+  transform: none !important;
+  transition: none;
+  isolation: isolate;
+}
+
+.flap-char {
+  position: absolute;
+  inset: 0;
+  /* Slow at the start and end: the top flap drops, the bottom flap settles. */
+  transition: --wtcg-slide-offset var(--flip) ease-in-out;
+}
+
+.flap-char:not([data-wtcg-active]) {
+  display: none;
+}
+
+.flap-half {
+  --o: var(--wtcg-slide-offset);
+
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding-bottom: calc(var(--glyph-lift) * 2);
+  border-radius: calc(var(--cell-w) * 0.1);
+  color: var(--ink);
+  font:
+    600 calc(var(--cell-h) * 0.78) / 1 'Barlow Condensed',
+    'Arial Narrow',
+    sans-serif;
+  backface-visibility: hidden;
+  will-change: transform, filter;
+}
+
+/*
+ * Outgoing character (offset 0 > -1): its top half falls toward the viewer.
+ *
+ * Stacking uses --wtcg-slide-side (-1, 0, or 1)
+ */
+.flap-top {
+  z-index: calc(2 - var(--wtcg-slide-side));
+  background: linear-gradient(var(--panel-top), var(--panel-bottom));
+  clip-path: inset(0 0 50% 0);
+  transform: perspective(calc(var(--cell-h) * 4)) rotateX(calc(clamp(-1, var(--o) * 2, 0) * 90deg));
+  /* Darken as it falls away from the light so the motion reads. */
+  filter: brightness(calc(1 - clamp(0, var(--o) * -2, 1) * 0.6));
+}
+
+/*
+ * Incoming character (offset 1 > 0): its bottom half swings down.
+ */
+.flap-bottom {
+  z-index: calc(2 + var(--wtcg-slide-side));
+  background: linear-gradient(var(--panel-top), var(--panel-bottom));
+  clip-path: inset(50% 0 0 0);
+  transform: perspective(calc(var(--cell-h) * 4)) rotateX(calc(clamp(0, var(--o) * 2, 1) * 90deg));
+  filter: brightness(calc(1 + clamp(0, var(--o) * 2, 1) * 0.5));
+}
+
+/*
+ * Snap the offset during instant changes
+ */
+.flap[data-wtcg-instant] .flap-char {
+  transition: none;
+}
+
+.board-form {
+  display: flex;
+  gap: 0.5rem;
+  width: min(100%, 31rem);
+}
+
+.board-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #3a3a3e;
+  border-radius: 6px;
+  background: #151517;
+  color: var(--ink);
+  font:
+    500 1rem Inter,
+    system-ui,
+    sans-serif;
+  text-transform: uppercase;
+}
+
+.board-form input::placeholder {
+  color: var(--muted);
+  text-transform: none;
+}
+
+.board-form button,
+.board-presets button,
+p a {
+  border-radius: 6px;
+  font:
+    500 0.9rem Inter,
+    system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+
+.board-form button {
+  padding: 0.65rem 1.2rem;
+  border: 0;
+  background: var(--accent);
+  color: #1a1606;
+}
+
+.board-form .sound-toggle {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  padding-inline: 0.9rem;
+  border: 1px solid #3a3a3e;
+  background: transparent;
+  color: var(--ink);
+}
+
+.sound-toggle::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+}
+
+.sound-toggle[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sound-toggle[aria-pressed='true']::before {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.board-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  max-width: 40rem;
+}
+
+.board-presets button,
+p a {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #3a3a3e;
+  background: transparent;
+  color: var(--ink);
+}
+
+.board-presets button:hover,
+p a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+:is(input, button):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flap-char {
+    transition: none;
+  }
+}
