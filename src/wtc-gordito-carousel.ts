@@ -1470,7 +1470,10 @@ export class WtcGorditoCarousel {
       // doesn't apply here: it's relative to the list width, which can be
       // wider than a slide, and would snap back past a closer neighbour.
       const targetTrackIndex = this.getTrackIndexForOffset(releaseOffset);
-      const targetOriginal = targetTrackIndex - this.cloneCount;
+      const rawTargetOriginal = targetTrackIndex - this.cloneCount;
+      const targetOriginal = this.options.infinite
+        ? rawTargetOriginal
+        : clamp(rawTargetOriginal, 0, this.maxSlide);
       const nextSlide = this.options.infinite
         ? modulo(targetOriginal, this.slideCount)
         : targetOriginal;
