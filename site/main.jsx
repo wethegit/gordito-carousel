@@ -994,7 +994,7 @@ function Docs() {
           <Snippet
             label="Default options"
             language="JS"
-          >{`new WtcGorditoCarousel(element, {\n  adaptiveHeight: false, arrows: true, centerMode: false, pagination: false,\n  drag: true, edgeFriction: 0.35, focusOnSelect: false, focusOnChange: false,\n  infinite: true, initialSlide: 0, slide: '', touchThreshold: 5, waitForAnimate: true,\n});`}</Snippet>
+          >{`new WtcGorditoCarousel(element, {\n  adaptiveHeight: false, arrows: true, centerMode: false, pagination: false,\n  drag: true, edgeFriction: 0.35, focusOnSelect: false, focusOnChange: false,\n  infinite: true, initialSlide: 0, slide: '', touchThreshold: 5, waitForAnimate: false,\n});`}</Snippet>
           <Table
             headers={['Option', 'Type', 'Description']}
             rows={[
@@ -1038,7 +1038,11 @@ function Docs() {
                 'number',
                 'Swipe threshold fraction; 5 means one-fifth width.',
               ],
-              [<code>waitForAnimate</code>, 'boolean', 'Ignore requests during a transition.'],
+              [
+                <code>waitForAnimate</code>,
+                'boolean',
+                'Block requests during a transition; false redirects the moving track.',
+              ],
             ]}
           />
         </section>
