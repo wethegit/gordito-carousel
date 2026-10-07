@@ -1,5 +1,11 @@
 # @wethegit/gordito-carousel
 
+## 1.0.2
+
+### Patch Changes
+
+- [#5](https://github.com/wethegit/gordito-carousel/pull/5) [`63b404d`](https://github.com/wethegit/gordito-carousel/commit/63b404d7eee95650c4c111f38abe4f303bdffcd1) Thanks [@liamegan](https://github.com/liamegan)! - Fix `drag: 'free'` snapping back to the current slide when the next one was closer. Releasing a free drag now always settles on the nearest slide, however far you dragged. Before, drags shorter than the swipe threshold (list width ÷ `touchThreshold`) always returned to the current slide, which in layouts with narrow slides meant snapping back even after dragging most of the way to the next one. `wtcg:swipe` now also fires on these shorter drags whenever the slide changes.
+
 ## 1.0.1
 
 ### Patch Changes
