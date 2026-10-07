@@ -843,6 +843,39 @@ footer {
   min-height: 54px;
   justify-content: space-between;
 }
+.more-list {
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+.more-item {
+  display: grid;
+  grid-template-columns: 1.3fr 2fr;
+  gap: 28px;
+  align-items: baseline;
+  padding-block: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.more-item dt {
+  font: 900 clamp(1.4rem, 2.2vw, 2rem) / 1 var(--display);
+  letter-spacing: -0.05em;
+}
+.more-item dt a {
+  text-decoration: none;
+}
+.more-item dt a:hover,
+.more-item dt a:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.more-item dt span {
+  color: var(--orange);
+}
+.more-item dd {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
 .snippet {
   background: #252b2c;
 }
@@ -984,6 +1017,12 @@ footer {
   }
   .demo-intro > p {
     margin-top: 18px;
+  }
+  .more-item {
+    display: block;
+  }
+  .more-item dd {
+    margin-top: 12px;
   }
   .option-pills {
     margin-top: 18px;
