@@ -1,0 +1,22 @@
+.site-back {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.site-back:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.site-back:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}

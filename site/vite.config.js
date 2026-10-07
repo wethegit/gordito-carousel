@@ -63,6 +63,7 @@ export default defineConfig(({ command }) => ({
       input: {
         main: resolve(repoRoot, 'site/index.html'),
         'path-carousel': resolve(repoRoot, 'site/path-carousel/index.html'),
+        'split-flap': resolve(repoRoot, 'site/split-flap/index.html'),
       },
     },
   },

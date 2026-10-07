@@ -659,6 +659,16 @@ const MORE_DEMOS = [
       </>
     ),
   },
+  {
+    href: 'split-flap/',
+    title: 'Departures',
+    description: (
+      <>
+        A departure board where each character flips through its own carousel. Set a target per cell
+        and step forward after each <code>wtcg:afterChange</code>.
+      </>
+    ),
+  },
 ];
 function MoreDemos() {
   return (
