@@ -113,6 +113,8 @@ export class WtcGorditoCarousel {
   declare animating: boolean;
   declare moveId: number;
   declare rebasing: boolean;
+  declare rebaseId: number;
+  declare positionWrite: number;
   declare dragging: boolean;
   declare currentSlide: number;
   declare trackIndex: number;
@@ -180,6 +182,8 @@ export class WtcGorditoCarousel {
     this.animating = false;
     this.moveId = 0;
     this.rebasing = false;
+    this.rebaseId = 0;
+    this.positionWrite = 0;
     this.dragging = false;
     this.currentSlide = this.options.initialSlide || 0;
     this.trackIndex = 0;
@@ -946,6 +950,7 @@ export class WtcGorditoCarousel {
     this.track.style.transform = `translate3d(${offset}px, 0, 0)`;
 
     this.positionOffset = offset;
+    this.positionWrite += 1;
     return offset;
   }
 
@@ -987,14 +992,16 @@ export class WtcGorditoCarousel {
 
     this.slider.setAttribute('data-wtcg-instant', '');
     this.applyPosition(forcedOffset);
+    const write = this.positionWrite;
 
     // Removing [data-wtcg-instant] synchronously can let the browser coalesce
     // the attribute removal with the transform write, causing an intended snap
     // to animate. Waiting two frames gives the browser one paint with
-    // transitions disabled before normal transitions are restored.
+    // transitions disabled before normal transitions are restored. A newer
+    // write owns the attribute, since this one's frames may not cover its paint.
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        this.slider.removeAttribute('data-wtcg-instant');
+        if (write === this.positionWrite) this.slider.removeAttribute('data-wtcg-instant');
         callback();
       });
     });
@@ -1063,7 +1070,15 @@ export class WtcGorditoCarousel {
     // Let transition-enabled styles apply before writing the transform. This
     // avoids coalescing instant-state removal with the movement that should
     // animate, especially at clone boundaries.
+    const write = ++this.positionWrite;
     window.requestAnimationFrame(() => {
+      // Any position written since (a newer move, a drag, an instant jump)
+      // supersedes this one. The callback still runs; superseded moves ignore it.
+      if (write !== this.positionWrite) {
+        callback();
+        return;
+      }
+
       if (!this.hasTransformTransition()) {
         this.applyPosition(targetOffset);
         callback();
@@ -1297,17 +1312,43 @@ export class WtcGorditoCarousel {
       targetOriginal = clamp(targetOriginal, 0, this.maxSlide);
     }
 
+    // The move in flight already goes there and will settle itself.
+    const requestedTrackIndex = this.options.infinite
+      ? this.cloneCount + targetOriginal
+      : targetOriginal;
+    if (this.animating && !dontAnimate && requestedTrackIndex === this.trackIndex) return;
+
     // A move mid-transition that would run past the rendered clones recentres
     // the track first, the same way settling does, then continues from there.
-    if (this.animating && this.options.infinite) {
+    // Instant moves jump straight to the target, so they never need this.
+    if (this.animating && this.options.infinite && !dontAnimate) {
+      const setSize = this.slideCount;
       const visible = Math.ceil(this.slides);
-      const lastIndex = this.slideSizes.length - 1;
+      const lowest = visible;
+      const highest = this.slideSizes.length - 1 - visible;
       const target = this.cloneCount + targetOriginal;
 
-      if (target < visible || target > lastIndex - visible) {
-        const shift = this.trackIndex - (this.cloneCount + this.currentSlide);
-        this.rebaseMidFlight(shift);
-        targetOriginal -= shift;
+      if (target < lowest || target > highest) {
+        // Shifts are whole slide sets, measured from where the track is
+        // rendered rather than where it is heading, so both the rendered view
+        // and the target stay within the clones.
+        const renderedOffset = this.getRenderedOffset();
+        const rendered = this.getTrackIndexForOffset(renderedOffset);
+        const sets =
+          target > highest
+            ? Math.ceil((target - highest) / setSize)
+            : -Math.ceil((lowest - target) / setSize);
+        const rebaseSets = clamp(
+          sets,
+          -Math.max(0, Math.floor((highest - rendered) / setSize)),
+          Math.max(0, Math.floor((rendered - lowest) / setSize)),
+        );
+
+        if (rebaseSets) this.rebaseMidFlight(rebaseSets * setSize, rendered, renderedOffset);
+
+        // Sets the rendered view can't shift by are too far to travel within
+        // the clones; the target becomes the same slide that many sets closer.
+        targetOriginal -= sets * setSize;
       }
     }
 
@@ -1321,6 +1362,13 @@ export class WtcGorditoCarousel {
       currentSlide: this.currentSlide,
       nextSlide,
     });
+
+    // An instant move overrides a pending rebase rather than animating on
+    // from it.
+    if (this.rebasing && dontAnimate) {
+      this.rebasing = false;
+      this.clearDragPreview();
+    }
 
     this.currentSlide = nextSlide;
     this.trackIndex = nextTrackIndex;
@@ -1349,15 +1397,17 @@ export class WtcGorditoCarousel {
    *
    * @private
    * @param {number} shift - Rendered slides to shift by, a multiple of the slide count.
+   * @param {number} rendered - Rendered track index nearest the current position.
+   * @param {number} renderedOffset - Current rendered track offset.
    */
-  rebaseMidFlight(shift: number): void {
+  rebaseMidFlight(shift: number, rendered: number, renderedOffset: number): void {
     const offset =
-      this.getRenderedOffset() +
-      this.getTrackOffsetByIndex(this.trackIndex - shift) -
-      this.getTrackOffsetByIndex(this.trackIndex);
+      renderedOffset +
+      this.getTrackOffsetByIndex(rendered - shift) -
+      this.getTrackOffsetByIndex(rendered);
 
-    this.trackIndex -= shift;
-    this.moveId += 1;
+    // A newer rebase, made before this one painted, replaces it.
+    const rebaseId = ++this.rebaseId;
     this.rebasing = true;
 
     // The drag preview drives slide variables from an arbitrary offset, which
@@ -1365,7 +1415,7 @@ export class WtcGorditoCarousel {
     this.updateDragPreview(offset);
 
     this.runInstantPosition(() => {
-      if (!this.rebasing) return;
+      if (!this.rebasing || rebaseId !== this.rebaseId) return;
 
       this.rebasing = false;
       this.clearDragPreview();
@@ -1401,7 +1451,10 @@ export class WtcGorditoCarousel {
         // Runtime CSS variables are refreshed during this invisible correction;
         // otherwise effects based on offset/distance would animate too.
         this.updateUI(false);
-        this.runInstantPosition(() => this.postSlide(index));
+        this.runInstantPosition(() => {
+          // A move or drag started during the correction now owns settling.
+          if (moveId === this.moveId) this.postSlide(index);
+        });
 
         return;
       }
@@ -1474,11 +1527,15 @@ export class WtcGorditoCarousel {
     this.clearDragPreview();
 
     if (interrupted) {
+      // Read before `[data-wtcg-dragging]` turns transitions off: that cancels
+      // the transition, and the computed transform jumps to its destination.
+      const renderedOffset = this.getRenderedOffset();
+
       this.moveId += 1;
       this.animating = false;
       this.rebasing = false;
       this.slider.setAttribute('data-wtcg-dragging', '');
-      startOffset = this.applyPosition(this.getRenderedOffset());
+      startOffset = this.applyPosition(renderedOffset);
       // Slide variables follow the frozen position too, rather than snapping
       // to the abandoned target while transitions are suppressed.
       this.updateDragPreview(startOffset);
