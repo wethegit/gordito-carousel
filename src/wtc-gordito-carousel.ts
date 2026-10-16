@@ -115,6 +115,7 @@ export class WtcGorditoCarousel {
   declare rebasing: boolean;
   declare rebaseId: number;
   declare positionWrite: number;
+  declare transitionCleanups: Set<() => void>;
   declare dragging: boolean;
   declare currentSlide: number;
   declare trackIndex: number;
@@ -184,6 +185,7 @@ export class WtcGorditoCarousel {
     this.rebasing = false;
     this.rebaseId = 0;
     this.positionWrite = 0;
+    this.transitionCleanups = new Set();
     this.dragging = false;
     this.currentSlide = this.options.initialSlide || 0;
     this.trackIndex = 0;
@@ -534,6 +536,16 @@ export class WtcGorditoCarousel {
     if (this.eventController) this.eventController.abort();
     if (this.resizeObserver) this.resizeObserver.disconnect();
     window.clearTimeout(this.pointerDownSlideTimer as number | undefined);
+
+    // Abandon any move in flight: drop its transition listeners and let queued
+    // writes and callbacks see they have been superseded.
+    this.transitionCleanups.forEach((cleanup) => cleanup());
+    this.transitionCleanups.clear();
+    this.moveId += 1;
+    this.rebaseId += 1;
+    this.positionWrite += 1;
+    this.animating = false;
+    this.rebasing = false;
 
     this.originalSlides.forEach((slide) => {
       slide.removeAttribute('data-wtcg-active');
@@ -1030,6 +1042,8 @@ export class WtcGorditoCarousel {
     }
 
     let completed = false;
+    // The position write that starts this transition, set once it is applied.
+    let applied = -1;
 
     const isTransformEvent = (event: TransitionEvent) =>
       event.target === track && event.propertyName === 'transform';
@@ -1037,6 +1051,7 @@ export class WtcGorditoCarousel {
     const cleanup = () => {
       track.removeEventListener('transitionend', handleDone);
       track.removeEventListener('transitioncancel', handleDone);
+      this.transitionCleanups.delete(cleanup);
     };
 
     const done = () => {
@@ -1048,6 +1063,14 @@ export class WtcGorditoCarousel {
 
     const handleDone = (event: TransitionEvent) => {
       if (!isTransformEvent(event)) return;
+
+      // A newer write (a move, drag, instant jump or resize) has replaced this
+      // one, so its listeners are done. Superseded moves ignore the callback;
+      // one superseded only by a resize settles where the resize put it.
+      if (applied !== this.positionWrite) {
+        done();
+        return;
+      }
 
       // Retargeting cancels the previous transition, and that event can arrive
       // after this move's listeners are attached. Only a cancel that leaves the
@@ -1088,7 +1111,9 @@ export class WtcGorditoCarousel {
 
       track.addEventListener('transitionend', handleDone);
       track.addEventListener('transitioncancel', handleDone);
+      this.transitionCleanups.add(cleanup);
       this.applyPosition(targetOffset);
+      applied = this.positionWrite;
     });
   }
 
