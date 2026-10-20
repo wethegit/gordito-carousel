@@ -58,7 +58,7 @@ export const WTC_GORDITO_CAROUSEL_DEFAULTS: Required<WtcGorditoCarouselOptions> 
   initialSlide: 0,
   slide: '',
   touchThreshold: 5,
-  waitForAnimate: true,
+  waitForAnimate: false,
 };
 
 /**
@@ -111,6 +111,11 @@ export class WtcGorditoCarousel {
   declare options: Required<WtcGorditoCarouselOptions>;
   declare enabled: boolean;
   declare animating: boolean;
+  declare moveId: number;
+  declare rebasing: boolean;
+  declare rebaseId: number;
+  declare positionWrite: number;
+  declare transitionCleanups: Set<() => void>;
   declare dragging: boolean;
   declare currentSlide: number;
   declare trackIndex: number;
@@ -137,6 +142,7 @@ export class WtcGorditoCarousel {
     startOffset: number;
     currentOffset: number;
     moved: boolean;
+    interrupted: boolean;
   } | null;
   declare pointerDownSlide: HTMLElement | null;
   declare pointerDownSlideTimer: number | null;
@@ -175,6 +181,11 @@ export class WtcGorditoCarousel {
     this.options = { ...this.originalSettings };
     this.enabled = true;
     this.animating = false;
+    this.moveId = 0;
+    this.rebasing = false;
+    this.rebaseId = 0;
+    this.positionWrite = 0;
+    this.transitionCleanups = new Set();
     this.dragging = false;
     this.currentSlide = this.options.initialSlide || 0;
     this.trackIndex = 0;
@@ -525,6 +536,16 @@ export class WtcGorditoCarousel {
     if (this.eventController) this.eventController.abort();
     if (this.resizeObserver) this.resizeObserver.disconnect();
     window.clearTimeout(this.pointerDownSlideTimer as number | undefined);
+
+    // Abandon any move in flight: drop its transition listeners and let queued
+    // writes and callbacks see they have been superseded.
+    this.transitionCleanups.forEach((cleanup) => cleanup());
+    this.transitionCleanups.clear();
+    this.moveId += 1;
+    this.rebaseId += 1;
+    this.positionWrite += 1;
+    this.animating = false;
+    this.rebasing = false;
 
     this.originalSlides.forEach((slide) => {
       slide.removeAttribute('data-wtcg-active');
@@ -941,7 +962,16 @@ export class WtcGorditoCarousel {
     this.track.style.transform = `translate3d(${offset}px, 0, 0)`;
 
     this.positionOffset = offset;
+    this.positionWrite += 1;
     return offset;
+  }
+
+  /** @private @returns {number} Track offset as currently rendered, including mid-transition. */
+  getRenderedOffset(): number {
+    if (!this.track) return 0;
+
+    const { transform } = window.getComputedStyle(this.track);
+    return transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m41;
   }
 
   /** @private @returns {boolean} Whether current CSS can emit a transform transition event. */
@@ -974,14 +1004,16 @@ export class WtcGorditoCarousel {
 
     this.slider.setAttribute('data-wtcg-instant', '');
     this.applyPosition(forcedOffset);
+    const write = this.positionWrite;
 
     // Removing [data-wtcg-instant] synchronously can let the browser coalesce
     // the attribute removal with the transform write, causing an intended snap
     // to animate. Waiting two frames gives the browser one paint with
-    // transitions disabled before normal transitions are restored.
+    // transitions disabled before normal transitions are restored. A newer
+    // write owns the attribute, since this one's frames may not cover its paint.
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        this.slider.removeAttribute('data-wtcg-instant');
+        if (write === this.positionWrite) this.slider.removeAttribute('data-wtcg-instant');
         callback();
       });
     });
@@ -1010,6 +1042,8 @@ export class WtcGorditoCarousel {
     }
 
     let completed = false;
+    // The position write that starts this transition, set once it is applied.
+    let applied = -1;
 
     const isTransformEvent = (event: TransitionEvent) =>
       event.target === track && event.propertyName === 'transform';
@@ -1017,6 +1051,7 @@ export class WtcGorditoCarousel {
     const cleanup = () => {
       track.removeEventListener('transitionend', handleDone);
       track.removeEventListener('transitioncancel', handleDone);
+      this.transitionCleanups.delete(cleanup);
     };
 
     const done = () => {
@@ -1027,7 +1062,27 @@ export class WtcGorditoCarousel {
     };
 
     const handleDone = (event: TransitionEvent) => {
-      if (isTransformEvent(event)) done();
+      if (!isTransformEvent(event)) return;
+
+      // A newer write (a move, drag, instant jump or resize) has replaced this
+      // one, so its listeners are done. Superseded moves ignore the callback;
+      // one superseded only by a resize settles where the resize put it.
+      if (applied !== this.positionWrite) {
+        done();
+        return;
+      }
+
+      // Retargeting cancels the previous transition, and that event can arrive
+      // after this move's listeners are attached. Only a cancel that leaves the
+      // track at this move's target (e.g. transitions switched off) finishes it.
+      if (
+        event.type === 'transitioncancel' &&
+        Math.abs(this.getRenderedOffset() - targetOffset) > 0.5
+      ) {
+        return;
+      }
+
+      done();
     };
 
     // Note: we do want to remove this in case it was added by a cancelled
@@ -1038,7 +1093,15 @@ export class WtcGorditoCarousel {
     // Let transition-enabled styles apply before writing the transform. This
     // avoids coalescing instant-state removal with the movement that should
     // animate, especially at clone boundaries.
+    const write = ++this.positionWrite;
     window.requestAnimationFrame(() => {
+      // Any position written since (a newer move, a drag, an instant jump)
+      // supersedes this one. The callback still runs; superseded moves ignore it.
+      if (write !== this.positionWrite) {
+        callback();
+        return;
+      }
+
       if (!this.hasTransformTransition()) {
         this.applyPosition(targetOffset);
         callback();
@@ -1048,7 +1111,9 @@ export class WtcGorditoCarousel {
 
       track.addEventListener('transitionend', handleDone);
       track.addEventListener('transitioncancel', handleDone);
+      this.transitionCleanups.add(cleanup);
       this.applyPosition(targetOffset);
+      applied = this.positionWrite;
     });
   }
 
@@ -1272,9 +1337,50 @@ export class WtcGorditoCarousel {
       targetOriginal = clamp(targetOriginal, 0, this.maxSlide);
     }
 
+    // The move in flight already goes there and will settle itself.
+    const requestedTrackIndex = this.options.infinite
+      ? this.cloneCount + targetOriginal
+      : targetOriginal;
+    if (this.animating && !dontAnimate && requestedTrackIndex === this.trackIndex) return;
+
+    // A move mid-transition that would run past the rendered clones recentres
+    // the track first, the same way settling does, then continues from there.
+    // Instant moves jump straight to the target, so they never need this.
+    if (this.animating && this.options.infinite && !dontAnimate) {
+      const setSize = this.slideCount;
+      const visible = Math.ceil(this.slides);
+      const lowest = visible;
+      const highest = this.slideSizes.length - 1 - visible;
+      const target = this.cloneCount + targetOriginal;
+
+      if (target < lowest || target > highest) {
+        // Shifts are whole slide sets, measured from where the track is
+        // rendered rather than where it is heading, so both the rendered view
+        // and the target stay within the clones.
+        const renderedOffset = this.getRenderedOffset();
+        const rendered = this.getTrackIndexForOffset(renderedOffset);
+        const sets =
+          target > highest
+            ? Math.ceil((target - highest) / setSize)
+            : -Math.ceil((lowest - target) / setSize);
+        const rebaseSets = clamp(
+          sets,
+          -Math.max(0, Math.floor((highest - rendered) / setSize)),
+          Math.max(0, Math.floor((rendered - lowest) / setSize)),
+        );
+
+        if (rebaseSets) this.rebaseMidFlight(rebaseSets * setSize, rendered, renderedOffset);
+
+        // Sets the rendered view can't shift by are too far to travel within
+        // the clones; the target becomes the same slide that many sets closer.
+        targetOriginal -= sets * setSize;
+      }
+    }
+
     const nextSlide = this.options.infinite
       ? modulo(targetOriginal, this.slideCount)
       : targetOriginal;
+    const nextTrackIndex = this.options.infinite ? this.cloneCount + targetOriginal : nextSlide;
 
     dispatch(this.slider, 'beforeChange', {
       carousel: this,
@@ -1282,32 +1388,103 @@ export class WtcGorditoCarousel {
       nextSlide,
     });
 
+    // An instant move overrides a pending rebase rather than animating on
+    // from it.
+    if (this.rebasing && dontAnimate) {
+      this.rebasing = false;
+      this.clearDragPreview();
+    }
+
     this.currentSlide = nextSlide;
-    this.trackIndex = this.options.infinite ? this.cloneCount + targetOriginal : nextSlide;
+    this.trackIndex = nextTrackIndex;
     this.animating = true;
     this.updateUI();
 
-    this.runPositionChange(dontAnimate, () => {
-      if (this.options.infinite) {
-        const originalStart = this.cloneCount;
-        const originalEnd = this.cloneCount + this.slideCount;
+    // Without `waitForAnimate`, a new request retargets the running transition
+    // and cancels it, which would run this move's callback early. Only the
+    // latest move settles: normalizes clones and fires `afterChange`.
+    const moveId = ++this.moveId;
 
-        if (this.trackIndex < originalStart || this.trackIndex >= originalEnd) {
-          this.trackIndex = this.cloneCount + this.currentSlide;
-          // Clone count provides visual buffer, but logical state should not sit
-          // on cloned rendered slides. Normalize as soon as the current rendered
-          // slide leaves the original band so arrows, drag, pagination, and
-          // focusOnSelect all behave consistently.
-          // Runtime CSS variables are refreshed during this invisible correction;
-          // otherwise effects based on offset/distance would animate too.
-          this.updateUI(false);
-          this.runInstantPosition(() => this.postSlide(nextSlide));
+    // A mid-flight rebase is still painting; it starts the move to the latest
+    // target once it has.
+    if (this.rebasing) return;
 
-          return;
-        }
+    this.runPositionChange(dontAnimate, () => this.settleMove(moveId));
+  }
+
+  /**
+   * Recentres an infinite track by whole slide sets while it is moving.
+   *
+   * The track and the slide variables are frozen at the currently rendered
+   * position, shifted onto identical clones with transitions suppressed, so
+   * nothing visibly changes. Once that has painted, the latest move animates
+   * on from there.
+   *
+   * @private
+   * @param {number} shift - Rendered slides to shift by, a multiple of the slide count.
+   * @param {number} rendered - Rendered track index nearest the current position.
+   * @param {number} renderedOffset - Current rendered track offset.
+   */
+  rebaseMidFlight(shift: number, rendered: number, renderedOffset: number): void {
+    const offset =
+      renderedOffset +
+      this.getTrackOffsetByIndex(rendered - shift) -
+      this.getTrackOffsetByIndex(rendered);
+
+    // A newer rebase, made before this one painted, replaces it.
+    const rebaseId = ++this.rebaseId;
+    this.rebasing = true;
+
+    // The drag preview drives slide variables from an arbitrary offset, which
+    // keeps fractional `--wtcg-slide-offset` effects where they are.
+    this.updateDragPreview(offset);
+
+    this.runInstantPosition(() => {
+      if (!this.rebasing || rebaseId !== this.rebaseId) return;
+
+      this.rebasing = false;
+      this.clearDragPreview();
+      this.updateSlideClasses();
+
+      const moveId = this.moveId;
+      this.runPositionChange(false, () => this.settleMove(moveId));
+    }, offset);
+  }
+
+  /**
+   * Settles the latest move once the track stops: normalizes infinite clones,
+   * then fires `afterChange`. Superseded moves are ignored.
+   *
+   * @private
+   * @param {number} moveId - The move being settled.
+   */
+  settleMove(moveId: number): void {
+    if (moveId !== this.moveId) return;
+
+    const index = this.currentSlide;
+
+    if (this.options.infinite) {
+      const originalStart = this.cloneCount;
+      const originalEnd = this.cloneCount + this.slideCount;
+
+      if (this.trackIndex < originalStart || this.trackIndex >= originalEnd) {
+        this.trackIndex = this.cloneCount + index;
+        // Clone count provides visual buffer, but logical state should not sit
+        // on cloned rendered slides. Normalize as soon as the current rendered
+        // slide leaves the original band so arrows, drag, pagination, and
+        // focusOnSelect all behave consistently.
+        // Runtime CSS variables are refreshed during this invisible correction;
+        // otherwise effects based on offset/distance would animate too.
+        this.updateUI(false);
+        this.runInstantPosition(() => {
+          // A move or drag started during the correction now owns settling.
+          if (moveId === this.moveId) this.postSlide(index);
+        });
+
+        return;
       }
-      this.postSlide(nextSlide);
-    });
+    }
+    this.postSlide(index);
   }
 
   /**
@@ -1367,7 +1544,28 @@ export class WtcGorditoCarousel {
     if (!this.isDraggable || !event.isPrimary || event.button !== 0 || this.pointer) return;
     if (this.animating && this.options.waitForAnimate) return;
 
+    // Grabbing the track mid-transition: freeze it where it is rendered so the
+    // drag starts under the pointer. The interrupted move settles on release.
+    const interrupted = this.animating;
+    let startOffset = this.trackOffset;
+
     this.clearDragPreview();
+
+    if (interrupted) {
+      // Read before `[data-wtcg-dragging]` turns transitions off: that cancels
+      // the transition, and the computed transform jumps to its destination.
+      const renderedOffset = this.getRenderedOffset();
+
+      this.moveId += 1;
+      this.animating = false;
+      this.rebasing = false;
+      this.slider.setAttribute('data-wtcg-dragging', '');
+      startOffset = this.applyPosition(renderedOffset);
+      // Slide variables follow the frozen position too, rather than snapping
+      // to the abandoned target while transitions are suppressed.
+      this.updateDragPreview(startOffset);
+    }
+
     window.clearTimeout(this.pointerDownSlideTimer as number | undefined);
     this.pointerDownSlide =
       event.target instanceof Element
@@ -1380,9 +1578,10 @@ export class WtcGorditoCarousel {
       startY: event.clientY,
       lastX: event.clientX,
       lastY: event.clientY,
-      startOffset: this.trackOffset,
-      currentOffset: this.trackOffset,
+      startOffset,
+      currentOffset: startOffset,
       moved: false,
+      interrupted,
     };
 
     this.dragging = true;
@@ -1453,8 +1652,22 @@ export class WtcGorditoCarousel {
     } catch {}
 
     const releaseOffset = this.pointer.currentOffset;
+    const { interrupted } = this.pointer;
     this.clearDragPreview();
     this.updateSlideClasses();
+
+    // Returns to the current slide. A move grabbed mid-transition never
+    // settled, so it settles once the track gets there.
+    const snapBack = () => {
+      if (!interrupted) {
+        this.runPositionChange(false);
+        return;
+      }
+
+      const moveId = ++this.moveId;
+      this.animating = true;
+      this.runPositionChange(false, () => this.settleMove(moveId));
+    };
 
     const forward = mainDelta < 0;
     const dispatchSwipe = () =>
@@ -1482,14 +1695,14 @@ export class WtcGorditoCarousel {
       if (changed || Math.abs(mainDelta) >= minSwipe) dispatchSwipe();
 
       if (changed) this.changeSlide(targetOriginal);
-      else this.runPositionChange(false);
+      else snapBack();
     } else if (Math.abs(mainDelta) >= minSwipe) {
       dispatchSwipe();
 
       if (forward) this.next();
       else this.prev();
     } else {
-      this.runPositionChange(false);
+      snapBack();
     }
 
     this.shouldSuppressClick = Boolean(this.pointer.moved);
