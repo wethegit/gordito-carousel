@@ -76,6 +76,66 @@ Options can also be set in markup. Programmatic settings are merged first, then 
 | `WTC_GORDITO_CAROUSEL_DEFAULTS`      | Default option object.                            |
 | `WTC_GORDITO_CAROUSEL_STATUS_TOKENS` | `{current}` and `{total}` status template tokens. |
 
+## React
+
+The React components are available from the `react/` entry point. They add the required
+`data-wtcg-*` attributes, initialize and destroy the carousel with the component lifecycle, and
+include the animation-suppression styles automatically.
+
+```tsx
+import {
+  Carousel,
+  CarouselList,
+  CarouselTrack,
+  CarouselSlide,
+  CarouselPrevious,
+  CarouselNext,
+  CarouselPagination,
+  CarouselPage,
+  useCarousel,
+} from '@wethegit/gordito-carousel/react';
+
+function CurrentSlide() {
+  const { currentSlide } = useCarousel();
+  return <p>Slide {currentSlide + 1}</p>;
+}
+
+function Gallery() {
+  return (
+    <Carousel options={{ infinite: true, pagination: true }} aria-label="Featured items">
+      <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>
+      <CarouselList className="gallery-list">
+        <CarouselTrack as="ul" className="gallery-track">
+          <CarouselSlide as="li">First slide</CarouselSlide>
+          <CarouselSlide as="li">Second slide</CarouselSlide>
+          <CarouselSlide as="li">Third slide</CarouselSlide>
+        </CarouselTrack>
+      </CarouselList>
+      <CarouselNext aria-label="Next slide">Next</CarouselNext>
+      <CarouselPagination aria-label="Choose slide">
+        <li>
+          <CarouselPage aria-label="Slide 1">1</CarouselPage>
+        </li>
+        <li>
+          <CarouselPage aria-label="Slide 2">2</CarouselPage>
+        </li>
+        <li>
+          <CarouselPage aria-label="Slide 3">3</CarouselPage>
+        </li>
+      </CarouselPagination>
+      <CurrentSlide />
+    </Carousel>
+  );
+}
+```
+
+`CarouselList`, `CarouselTrack`, and `CarouselSlide` accept an `as` prop for choosing semantic
+elements and otherwise pass through the selected element's React props. The control components
+render buttons and attach the matching core attributes. `useCarousel()` provides the active core
+instance (initially `null`) and its `currentSlide`; `onAfterChange` on `Carousel` receives the new
+slide index and instance. Use a stable `options` object when it is created during render because
+changing that object reinitializes the carousel.
+
 ## DOM Contract
 
 Required elements:
