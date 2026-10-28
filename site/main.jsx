@@ -734,6 +734,7 @@ function Docs() {
         <p className="kicker">Documentation</p>
         <a href="#quick-start">Quick start</a>
         <a href="#exports">Exports</a>
+        <a href="#react">React</a>
         <a href="#contract">DOM contract</a>
         <a href="#accessibility">Accessibility</a>
         <a href="#css-model">CSS model</a>
@@ -780,6 +781,64 @@ function Docs() {
               ],
             ]}
           />
+        </section>
+        <section id="react">
+          <p className="kicker">React entry point</p>
+          <h2>Compose the carousel with React.</h2>
+          <p>
+            Import the components from <code>@wethegit/gordito-carousel/react</code>. The React
+            entry point manages the core lifecycle, adds the structural attributes, and includes the
+            carousel styles. In server-component frameworks, use a client component for interactive
+            carousel usage.
+          </p>
+          <Snippet label="React carousel" language="JS">
+            {`'use client';
+import {
+  Carousel,
+  CarouselList,
+  CarouselTrack,
+  CarouselSlide,
+  CarouselPrevious,
+  CarouselNext,
+  useCarousel,
+} from '@wethegit/gordito-carousel/react';
+
+function CurrentSlide() {
+  const { currentSlide, swipe } = useCarousel();
+  return <button onClick={() => swipe('next')}>Slide {currentSlide + 1}</button>;
+}
+
+function Gallery() {
+  return (
+    <Carousel
+      options={{ infinite: true }}
+      aria-label="Featured items"
+      onBeforeChange={(currentSlide, nextSlide) => console.log(currentSlide, nextSlide)}
+    >
+      <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>
+      <CarouselList>
+        <CarouselTrack as="ul">
+          <CarouselSlide as="li">First slide</CarouselSlide>
+          <CarouselSlide as="li">Second slide</CarouselSlide>
+        </CarouselTrack>
+      </CarouselList>
+      <CarouselNext aria-label="Next slide">Next</CarouselNext>
+      <CurrentSlide />
+    </Carousel>
+  );
+}`}
+          </Snippet>
+          <p>
+            <code>CarouselList</code>, <code>CarouselTrack</code>, and <code>CarouselSlide</code>{' '}
+            accept <code>as</code> to choose a semantic element. <code>useCarousel()</code> provides
+            the core instance, <code>currentSlide</code>, <code>setPosition()</code>, and{' '}
+            <code>swipe('next' | 'previous')</code>. The root also accepts{' '}
+            <code>onBeforeChange</code> and <code>onAfterChange</code> callbacks.
+          </p>
+          <p>
+            React is a peer dependency; install React 18 or newer in your application. Keep the
+            <code>options</code> object stable to avoid reinitializing the carousel on each render.
+          </p>
         </section>
         <section id="contract">
           <p className="kicker">DOM contract</p>
