@@ -54,6 +54,8 @@ export function Carousel({
     if (!element) return;
 
     const handleBeforeChange = (event: Event) => {
+      if (event.target !== element) return;
+
       const {
         carousel: instance,
         currentSlide: current,
@@ -69,20 +71,42 @@ export function Carousel({
     };
 
     const handleAfterChange = (event: Event) => {
+      if (event.target !== element) return;
+
       const instance = (event as CustomEvent<{ carousel: WtcGorditoCarousel }>).detail.carousel;
       setCurrentSlide(instance.currentSlide);
       afterChangeCallback.current?.(instance.currentSlide, instance);
     };
 
+    const handleReInit = (event: Event) => {
+      if (event.target !== element) return;
+
+      const instance = (event as CustomEvent<{ carousel: WtcGorditoCarousel }>).detail.carousel;
+      setCurrentSlide(instance.currentSlide);
+    };
+
     element.addEventListener('wtcg:beforeChange', handleBeforeChange);
     element.addEventListener('wtcg:afterChange', handleAfterChange);
+    element.addEventListener('wtcg:reInit', handleReInit);
     const instance = new WtcGorditoCarousel(element, options);
     setCarousel(instance);
     setCurrentSlide(instance.currentSlide);
 
+    const observer = new MutationObserver(() => {
+      const slides = instance.collectDirectSlides();
+      const slidesChanged =
+        slides.length !== instance.originalSlides.length ||
+        slides.some((slide, index) => slide !== instance.originalSlides[index]);
+
+      if (slidesChanged) instance.refresh();
+    });
+    observer.observe(instance.track, { childList: true });
+
     return () => {
+      observer.disconnect();
       element.removeEventListener('wtcg:beforeChange', handleBeforeChange);
       element.removeEventListener('wtcg:afterChange', handleAfterChange);
+      element.removeEventListener('wtcg:reInit', handleReInit);
       instance.destroy();
       setCarousel(null);
     };
