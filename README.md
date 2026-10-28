@@ -131,10 +131,11 @@ function Gallery() {
 
 `CarouselList`, `CarouselTrack`, and `CarouselSlide` accept an `as` prop for choosing semantic
 elements and otherwise pass through the selected element's React props. The control components
-render buttons and attach the matching core attributes. `useCarousel()` provides the active core
-instance (initially `null`) and its `currentSlide`; `onAfterChange` on `Carousel` receives the new
-slide index and instance. Use a stable `options` object when it is created during render because
-changing that object reinitializes the carousel.
+render buttons and attach the matching core attributes. `useCarousel()` provides the active core instance (initially `null`), its `currentSlide`, and
+`setPosition()` and `swipe('next' | 'previous')` methods. `Carousel` supports both
+`onBeforeChange(currentSlide, nextSlide, carousel)` and `onAfterChange(currentSlide, carousel)`.
+Use a stable `options` object when it is created during render because changing that object
+reinitializes the carousel.
 
 ## DOM Contract
 

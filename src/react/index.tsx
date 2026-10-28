@@ -1,3 +1,5 @@
+'use client';
+
 import {
   createContext,
   createElement,
@@ -18,40 +20,68 @@ import './style.css';
 export interface CarouselContextValue {
   carousel: WtcGorditoCarousel | null;
   currentSlide: number;
+  setPosition: () => void;
+  swipe: (direction: 'next' | 'previous') => void;
 }
 
 const CarouselContext = createContext<CarouselContextValue | null>(null);
 
 export interface CarouselProps extends HTMLAttributes<HTMLElement> {
   children?: ReactNode;
+  onBeforeChange?: (currentSlide: number, nextSlide: number, carousel: WtcGorditoCarousel) => void;
   onAfterChange?: (currentSlide: number, carousel: WtcGorditoCarousel) => void;
   options?: Partial<WtcGorditoCarouselOptions>;
 }
 
-export function Carousel({ children, onAfterChange, options, ...props }: CarouselProps) {
+export function Carousel({
+  children,
+  onBeforeChange,
+  onAfterChange,
+  options,
+  ...props
+}: CarouselProps) {
   const root = useRef<HTMLElement>(null);
-  const callback = useRef(onAfterChange);
+  const beforeChangeCallback = useRef(onBeforeChange);
+  const afterChangeCallback = useRef(onAfterChange);
   const [carousel, setCarousel] = useState<WtcGorditoCarousel | null>(null);
   const [currentSlide, setCurrentSlide] = useState(options?.initialSlide ?? 0);
 
-  callback.current = onAfterChange;
+  beforeChangeCallback.current = onBeforeChange;
+  afterChangeCallback.current = onAfterChange;
 
   useEffect(() => {
     const element = root.current;
     if (!element) return;
 
+    const handleBeforeChange = (event: Event) => {
+      const {
+        carousel: instance,
+        currentSlide: current,
+        nextSlide,
+      } = (
+        event as CustomEvent<{
+          carousel: WtcGorditoCarousel;
+          currentSlide: number;
+          nextSlide: number;
+        }>
+      ).detail;
+      beforeChangeCallback.current?.(current, nextSlide, instance);
+    };
+
     const handleAfterChange = (event: Event) => {
       const instance = (event as CustomEvent<{ carousel: WtcGorditoCarousel }>).detail.carousel;
       setCurrentSlide(instance.currentSlide);
-      callback.current?.(instance.currentSlide, instance);
+      afterChangeCallback.current?.(instance.currentSlide, instance);
     };
 
+    element.addEventListener('wtcg:beforeChange', handleBeforeChange);
     element.addEventListener('wtcg:afterChange', handleAfterChange);
     const instance = new WtcGorditoCarousel(element, options);
     setCarousel(instance);
     setCurrentSlide(instance.currentSlide);
 
     return () => {
+      element.removeEventListener('wtcg:beforeChange', handleBeforeChange);
       element.removeEventListener('wtcg:afterChange', handleAfterChange);
       instance.destroy();
       setCarousel(null);
@@ -59,7 +89,24 @@ export function Carousel({ children, onAfterChange, options, ...props }: Carouse
   }, [options]);
 
   return (
-    <CarouselContext.Provider value={{ carousel, currentSlide }}>
+    <CarouselContext.Provider
+      value={{
+        carousel,
+        currentSlide,
+        setPosition: () => carousel?.setPosition(),
+        swipe: (direction) => {
+          if (!carousel) return;
+          carousel.slider.dispatchEvent(
+            new CustomEvent('wtcg:swipe', {
+              bubbles: true,
+              detail: { carousel, direction },
+            }),
+          );
+          if (direction === 'next') carousel.next();
+          else carousel.prev();
+        },
+      }}
+    >
       <section {...props} ref={root} data-wtcg-carousel="">
         {children}
       </section>
