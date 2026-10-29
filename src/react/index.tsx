@@ -156,9 +156,19 @@ export function Carousel({
   const Track = trackAs ?? 'ul';
   let slideNodes = children;
   if (items !== undefined) {
-    const slides =
-      renderPlan?.slides ??
-      items.map((_, index) => ({ index, sourceIndex: index, isClone: false }));
+    let slides = renderPlan?.slides ?? [];
+    if (!renderPlan || previousItems.current !== items) {
+      const originals = items.map((_, index) => ({
+        index,
+        sourceIndex: index,
+        isClone: false,
+      }));
+      slides = [
+        ...slides.filter((slide) => slide.isClone && slide.index < 0),
+        ...originals,
+        ...slides.filter((slide) => slide.isClone && slide.index >= 0),
+      ];
+    }
     slideNodes = slides.map((slide) => {
       const item = items[slide.sourceIndex];
       if (slide.sourceIndex < 0 || slide.sourceIndex >= items.length) return null;

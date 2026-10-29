@@ -47,6 +47,73 @@ async function render(
 }
 
 describe('React items mode', () => {
+  it.each([false, true])('renders appended items with infinite=%s', async (infinite) => {
+    const captured: { current: WtcGorditoCarousel | null } = { current: null };
+    const stableOptions = { infinite };
+    const items = [<div key="first">First</div>, <div key="second">Second</div>];
+    const capture = (value: WtcGorditoCarousel | null) => (captured.current = value);
+    await act(() =>
+      root.render(
+        <Carousel items={items} options={stableOptions}>
+          <Instance capture={capture} />
+        </Carousel>,
+      ),
+    );
+    const instance = captured.current;
+    const first = container.querySelector('[data-wtcg-slide]:not([data-wtcg-cloned])');
+
+    await act(() =>
+      root.render(
+        <Carousel items={[...items, <div key="third">Third</div>]} options={stableOptions}>
+          <Instance capture={capture} />
+        </Carousel>,
+      ),
+    );
+
+    expect(captured.current).toBe(instance);
+    expect(captured.current?.slideCount).toBe(3);
+    const originals = [...container.querySelectorAll('[data-wtcg-slide]:not([data-wtcg-cloned])')];
+    expect(originals.map((slide) => slide.textContent)).toEqual(['First', 'Second', 'Third']);
+    expect(originals[0]).toBe(first);
+    expect(captured.current?.allSlides.length).toBe(3 + 2 * captured.current!.cloneCount);
+    expect(originals.every((slide) => slide.hasAttribute('data-wtcg-original-style'))).toBe(true);
+  });
+
+  it.each([false, true])('populates initially empty items with infinite=%s', async (infinite) => {
+    const captured: { current: WtcGorditoCarousel | null } = { current: null };
+    const stableOptions = { infinite };
+    const capture = (value: WtcGorditoCarousel | null) => (captured.current = value);
+    await act(() =>
+      root.render(
+        <Carousel items={[]} options={stableOptions}>
+          <Instance capture={capture} />
+        </Carousel>,
+      ),
+    );
+    const instance = captured.current;
+    expect(instance?.slideCount).toBe(0);
+
+    await act(() =>
+      root.render(
+        <Carousel
+          items={[<div key="first">First</div>, <div key="second">Second</div>]}
+          options={stableOptions}
+        >
+          <Instance capture={capture} />
+        </Carousel>,
+      ),
+    );
+
+    expect(captured.current).toBe(instance);
+    expect(captured.current?.slideCount).toBe(2);
+    expect(
+      [...container.querySelectorAll('[data-wtcg-slide]:not([data-wtcg-cloned])')].map(
+        (slide) => slide.textContent,
+      ),
+    ).toEqual(['First', 'Second']);
+    expect(captured.current?.allSlides.length).toBe(2 + 2 * captured.current!.cloneCount);
+  });
+
   it('defaults to a ul track with direct li items, including infinite copies', async () => {
     await render([
       <CarouselItem key="first" className="first" style={{ color: 'red' }}>
