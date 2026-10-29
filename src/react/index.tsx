@@ -116,18 +116,18 @@ export function Carousel({
     setCarousel(instance);
     setCurrentSlide(instance.currentSlide);
 
-    const observer =
-      items === undefined
-        ? new MutationObserver(() => {
-            const slides = instance.collectDirectSlides();
-            const slidesChanged =
-              slides.length !== instance.originalSlides.length ||
-              slides.some((slide, index) => slide !== instance.originalSlides[index]);
+    let observer: MutationObserver | undefined;
+    if (items === undefined) {
+      observer = new MutationObserver(() => {
+        const slides = instance.collectDirectSlides();
+        const slidesChanged =
+          slides.length !== instance.originalSlides.length ||
+          slides.some((slide, index) => slide !== instance.originalSlides[index]);
 
-            if (slidesChanged) instance.refresh();
-          })
-        : null;
-    observer?.observe(instance.track, { childList: true });
+        if (slidesChanged) instance.refresh();
+      });
+      observer.observe(instance.track, { childList: true });
+    }
 
     return () => {
       observer?.disconnect();
@@ -152,39 +152,39 @@ export function Carousel({
     }
   }, [items, renderPlan, carousel]);
 
-  const slideNodes =
-    items === undefined
-      ? children
-      : (
-          renderPlan?.slides ??
-          items.map((_, index) => ({ index, sourceIndex: index, isClone: false }))
-        ).map((slide) => {
-          const item = items[slide.sourceIndex];
-          if (slide.sourceIndex < 0 || slide.sourceIndex >= items.length) return null;
-
-          const itemKey =
-            isValidElement(item) && item.key !== null ? item.key : String(slide.sourceIndex);
-          const key = slide.isClone ? `clone:${slide.index}:${itemKey}` : `item:${itemKey}`;
-          const attributes = {
-            key,
-            'data-wtcg-slide': '',
-            'data-wtcg-index': String(slide.index),
-            'data-wtcg-cloned': slide.isClone ? '' : undefined,
-            'data-wtcg-source-index': String(slide.sourceIndex),
-          };
-
-          if (isValidElement(item) && typeof item.type === 'string') {
-            return cloneElement(
-              item as ReactElement<Record<string, unknown>>,
-              attributes as Record<string, unknown>,
-            );
-          }
-
-          return createElement('div', attributes, item as ReactNode);
-        });
-
   const List = listAs ?? 'div';
-  const Track = trackAs ?? 'div';
+  const Track = trackAs ?? 'ul';
+  let slideNodes = children;
+  if (items !== undefined) {
+    const slides =
+      renderPlan?.slides ??
+      items.map((_, index) => ({ index, sourceIndex: index, isClone: false }));
+    slideNodes = slides.map((slide) => {
+      const item = items[slide.sourceIndex];
+      if (slide.sourceIndex < 0 || slide.sourceIndex >= items.length) return null;
+
+      const itemKey =
+        isValidElement(item) && item.key !== null ? item.key : String(slide.sourceIndex);
+      const key = slide.isClone ? `clone:${slide.index}:${itemKey}` : `item:${itemKey}`;
+      const attributes = {
+        key,
+        'data-wtcg-slide': '',
+        'data-wtcg-index': String(slide.index),
+        'data-wtcg-cloned': slide.isClone ? '' : undefined,
+        'data-wtcg-source-index': String(slide.sourceIndex),
+      };
+
+      if (isValidElement(item) && (typeof item.type === 'string' || item.type === CarouselItem)) {
+        return cloneElement(
+          item as ReactElement<Record<string, unknown>>,
+          attributes as Record<string, unknown>,
+        );
+      }
+
+      const Item = Track === 'ul' || Track === 'ol' ? 'li' : 'div';
+      return createElement(Item, attributes, item as ReactNode);
+    });
+  }
 
   return (
     <CarouselContext.Provider
@@ -235,12 +235,20 @@ export function CarouselList<T extends ElementType = 'div'>({
   return createElement(Element, { ...props, 'data-wtcg-list': '' } as ComponentPropsWithoutRef<T>);
 }
 
-export function CarouselTrack<T extends ElementType = 'div'>({
+export function CarouselTrack<T extends ElementType = 'ul'>({
   as,
   ...props
 }: MarkerProps<T>): ReactElement {
-  const Element = as ?? 'div';
+  const Element = as ?? 'ul';
   return createElement(Element, { ...props, 'data-wtcg-track': '' } as ComponentPropsWithoutRef<T>);
+}
+
+export function CarouselItem<T extends ElementType = 'li'>({
+  as,
+  ...props
+}: MarkerProps<T>): ReactElement {
+  const Element = as ?? 'li';
+  return createElement(Element, { ...props, 'data-wtcg-slide': '' } as ComponentPropsWithoutRef<T>);
 }
 
 export function CarouselSlide<T extends ElementType = 'div'>({
