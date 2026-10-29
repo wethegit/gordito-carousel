@@ -3,6 +3,17 @@ import { toArray, toElement, clamp, modulo, dispatch } from './wtc-gordito-carou
 export type WtcGorditoCarouselTarget = boolean | string | HTMLElement;
 export type WtcGorditoCarouselDrag = boolean | 'fixed' | 'free';
 
+export interface WtcGorditoCarouselRenderSlide {
+  index: number;
+  sourceIndex: number;
+  isClone: boolean;
+}
+
+export interface WtcGorditoCarouselRenderPlan {
+  id: number;
+  slides: WtcGorditoCarouselRenderSlide[];
+}
+
 export interface WtcGorditoCarouselOptions {
   adaptiveHeight?: boolean;
   arrows?: WtcGorditoCarouselTarget;
@@ -17,6 +28,7 @@ export interface WtcGorditoCarouselOptions {
   slide?: string;
   touchThreshold?: number;
   waitForAnimate?: boolean;
+  onRenderPlan?: ((plan: WtcGorditoCarouselRenderPlan) => void) | null;
 }
 
 export type WtcGorditoCarouselOptionValue = Exclude<
@@ -59,6 +71,7 @@ export const WTC_GORDITO_CAROUSEL_DEFAULTS: Required<WtcGorditoCarouselOptions> 
   slide: '',
   touchThreshold: 5,
   waitForAnimate: false,
+  onRenderPlan: null,
 };
 
 /**
@@ -126,6 +139,9 @@ export class WtcGorditoCarousel {
   declare listContentSize: number;
   declare trackGap: number;
   declare _cloneCount: number;
+  declare renderPlanId: number;
+  declare pendingRenderPlan: WtcGorditoCarouselRenderPlan | null;
+  declare pendingRenderEvent: 'init' | 'reInit' | null;
   declare positionOffset: number | null;
   declare previewTrackIndex: number | null;
   declare previewPosition: number | null;
@@ -196,6 +212,9 @@ export class WtcGorditoCarousel {
     this.listContentSize = 0;
     this.trackGap = 0;
     this._cloneCount = 0;
+    this.renderPlanId = 0;
+    this.pendingRenderPlan = null;
+    this.pendingRenderEvent = null;
     this.positionOffset = null;
     this.previewTrackIndex = null;
     this.previewPosition = null;
@@ -273,6 +292,11 @@ export class WtcGorditoCarousel {
     this.buildPagination();
     this.buildStatus();
     this.initializeEvents();
+    if (this.pendingRenderPlan) {
+      this.pendingRenderEvent = creation ? 'init' : null;
+      return;
+    }
+
     this.setPosition();
     this.updateUI(false);
 
@@ -337,6 +361,22 @@ export class WtcGorditoCarousel {
 
     this.renderedScroll = this.scrollAmount;
     this._cloneCount = this.calculateCloneCount();
+
+    if (this.options.onRenderPlan) {
+      const slides: WtcGorditoCarouselRenderSlide[] = [];
+      for (let index = -this.cloneCount; index < this.slideCount + this.cloneCount; index += 1) {
+        slides.push({
+          index,
+          sourceIndex: modulo(index, this.slideCount),
+          isClone: index < 0 || index >= this.slideCount,
+        });
+      }
+
+      this.pendingRenderPlan = { id: ++this.renderPlanId, slides };
+      this.options.onRenderPlan(this.pendingRenderPlan);
+      this.trackIndex = this.cloneCount + this.currentSlide;
+      return;
+    }
 
     const preClones: HTMLElement[] = [];
     const postClones: HTMLElement[] = [];
@@ -546,6 +586,8 @@ export class WtcGorditoCarousel {
     this.positionWrite += 1;
     this.animating = false;
     this.rebasing = false;
+    this.pendingRenderPlan = null;
+    this.pendingRenderEvent = null;
 
     this.originalSlides.forEach((slide) => {
       slide.removeAttribute('data-wtcg-active');
@@ -569,7 +611,9 @@ export class WtcGorditoCarousel {
       this.track.style.transform = '';
       this.track.style.width = '';
 
-      this.track.querySelectorAll('[data-wtcg-cloned]').forEach((slide) => slide.remove());
+      if (!this.options.onRenderPlan) {
+        this.track.querySelectorAll('[data-wtcg-cloned]').forEach((slide) => slide.remove());
+      }
     }
 
     if (this.prevArrow) {
@@ -644,7 +688,45 @@ export class WtcGorditoCarousel {
 
     this.init(false);
 
-    dispatch(this.slider, initializing ? 'init' : 'reInit', { carousel: this });
+    if (this.pendingRenderPlan) this.pendingRenderEvent = initializing ? 'init' : 'reInit';
+    else dispatch(this.slider, initializing ? 'init' : 'reInit', { carousel: this });
+  }
+
+  /**
+   * Completes an externally rendered slide plan after its DOM has committed.
+   *
+   * @param {number} id - ID from the render plan being committed.
+   * @returns {boolean} Whether the current plan was accepted.
+   */
+  commitRenderPlan(id: number): boolean {
+    const plan = this.pendingRenderPlan;
+    if (!plan || plan.id !== id) return false;
+
+    const renderedSlides = this.allSlides;
+    const originalSlides = this.collectDirectSlides();
+    if (
+      renderedSlides.length !== plan.slides.length ||
+      originalSlides.length !== this.slideCount ||
+      plan.slides.some(
+        (item, index) =>
+          renderedSlides[index]?.getAttribute('data-wtcg-index') !== String(item.index) ||
+          renderedSlides[index]?.hasAttribute('data-wtcg-cloned') !== item.isClone,
+      )
+    ) {
+      return false;
+    }
+
+    this.originalSlides = originalSlides;
+    this.pendingRenderPlan = null;
+    this.trackIndex = this.cloneCount + this.currentSlide;
+    this.setPosition();
+    this.updateUI(false);
+
+    const event = this.pendingRenderEvent;
+    this.pendingRenderEvent = null;
+    if (event) dispatch(this.slider, event, { carousel: this });
+
+    return true;
   }
 
   /** @private @returns {number} Visible slide count from CSS custom properties. */
@@ -768,7 +850,7 @@ export class WtcGorditoCarousel {
    * @fires wtcg:setPosition
    */
   setPosition(): void {
-    if (!this.enabled || !this.list || !this.track) return;
+    if (!this.enabled || !this.list || !this.track || this.pendingRenderPlan) return;
 
     this.setDimensions();
     this.updateUI(true);

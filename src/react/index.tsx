@@ -3,8 +3,12 @@
 import {
   createContext,
   createElement,
+  cloneElement,
+  Fragment,
+  isValidElement,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ButtonHTMLAttributes,
@@ -14,7 +18,11 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { WtcGorditoCarousel, type WtcGorditoCarouselOptions } from '../wtc-gordito-carousel.js';
+import {
+  WtcGorditoCarousel,
+  type WtcGorditoCarouselOptions,
+  type WtcGorditoCarouselRenderPlan,
+} from '../wtc-gordito-carousel.js';
 import './style.css';
 
 export interface CarouselContextValue {
@@ -25,16 +33,23 @@ export interface CarouselContextValue {
 }
 
 const CarouselContext = createContext<CarouselContextValue | null>(null);
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 export interface CarouselProps extends HTMLAttributes<HTMLElement> {
   children?: ReactNode;
+  items?: readonly ReactNode[];
+  listAs?: ElementType;
+  trackAs?: ElementType;
   onBeforeChange?: (currentSlide: number, nextSlide: number, carousel: WtcGorditoCarousel) => void;
   onAfterChange?: (currentSlide: number, carousel: WtcGorditoCarousel) => void;
-  options?: Partial<WtcGorditoCarouselOptions>;
+  options?: Partial<Omit<WtcGorditoCarouselOptions, 'onRenderPlan'>>;
 }
 
 export function Carousel({
   children,
+  items,
+  listAs,
+  trackAs,
   onBeforeChange,
   onAfterChange,
   options,
@@ -45,11 +60,13 @@ export function Carousel({
   const afterChangeCallback = useRef(onAfterChange);
   const [carousel, setCarousel] = useState<WtcGorditoCarousel | null>(null);
   const [currentSlide, setCurrentSlide] = useState(options?.initialSlide ?? 0);
+  const [renderPlan, setRenderPlan] = useState<WtcGorditoCarouselRenderPlan | null>(null);
+  const previousItems = useRef(items);
 
   beforeChangeCallback.current = onBeforeChange;
   afterChangeCallback.current = onAfterChange;
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const element = root.current;
     if (!element) return;
 
@@ -88,29 +105,89 @@ export function Carousel({
     element.addEventListener('wtcg:beforeChange', handleBeforeChange);
     element.addEventListener('wtcg:afterChange', handleAfterChange);
     element.addEventListener('wtcg:reInit', handleReInit);
-    const instance = new WtcGorditoCarousel(element, options);
+    const instance = new WtcGorditoCarousel(element, {
+      ...options,
+      onRenderPlan:
+        items === undefined
+          ? undefined
+          : (plan) => {
+              setRenderPlan(plan);
+            },
+    });
     setCarousel(instance);
     setCurrentSlide(instance.currentSlide);
 
-    const observer = new MutationObserver(() => {
-      const slides = instance.collectDirectSlides();
-      const slidesChanged =
-        slides.length !== instance.originalSlides.length ||
-        slides.some((slide, index) => slide !== instance.originalSlides[index]);
+    const observer =
+      items === undefined
+        ? new MutationObserver(() => {
+            const slides = instance.collectDirectSlides();
+            const slidesChanged =
+              slides.length !== instance.originalSlides.length ||
+              slides.some((slide, index) => slide !== instance.originalSlides[index]);
 
-      if (slidesChanged) instance.refresh();
-    });
-    observer.observe(instance.track, { childList: true });
+            if (slidesChanged) instance.refresh();
+          })
+        : null;
+    observer?.observe(instance.track, { childList: true });
 
     return () => {
-      observer.disconnect();
+      observer?.disconnect();
       element.removeEventListener('wtcg:beforeChange', handleBeforeChange);
       element.removeEventListener('wtcg:afterChange', handleAfterChange);
       element.removeEventListener('wtcg:reInit', handleReInit);
       instance.destroy();
       setCarousel(null);
+      setRenderPlan(null);
     };
-  }, [options]);
+  }, [options, items === undefined]);
+
+  useIsomorphicLayoutEffect(() => {
+    if (previousItems.current === items) return;
+    previousItems.current = items;
+    if (items !== undefined && carousel?.enabled) carousel.refresh();
+  }, [items, carousel]);
+
+  const itemsChanged = previousItems.current !== items;
+  const activePlan = itemsChanged ? null : renderPlan;
+
+  useIsomorphicLayoutEffect(() => {
+    if (items !== undefined && activePlan && carousel) {
+      carousel.commitRenderPlan(activePlan.id);
+    }
+  }, [items, activePlan, carousel]);
+
+  const slideNodes =
+    items === undefined
+      ? children
+      : (
+          activePlan?.slides ??
+          items.map((_, index) => ({ index, sourceIndex: index, isClone: false }))
+        ).map((slide) => {
+          const item = items[slide.sourceIndex];
+          if (slide.sourceIndex < 0 || slide.sourceIndex >= items.length) return null;
+
+          const itemKey =
+            isValidElement(item) && item.key !== null ? item.key : String(slide.sourceIndex);
+          const key = slide.isClone ? `clone:${slide.index}:${itemKey}` : `item:${itemKey}`;
+          const attributes = {
+            key,
+            'data-wtcg-slide': '',
+            'data-wtcg-index': String(slide.index),
+            'data-wtcg-cloned': slide.isClone ? '' : undefined,
+          };
+
+          if (isValidElement(item) && item.type !== Fragment) {
+            return cloneElement(
+              item as ReactElement<Record<string, unknown>>,
+              attributes as Record<string, unknown>,
+            );
+          }
+
+          return createElement('div', attributes, item as ReactNode);
+        });
+
+  const List = listAs ?? 'div';
+  const Track = trackAs ?? 'div';
 
   return (
     <CarouselContext.Provider
@@ -132,7 +209,18 @@ export function Carousel({
       }}
     >
       <section {...props} ref={root} data-wtcg-carousel="">
-        {children}
+        {items === undefined ? (
+          children
+        ) : (
+          <>
+            {createElement(
+              List,
+              { 'data-wtcg-list': '' },
+              createElement(Track, { 'data-wtcg-track': '' }, slideNodes),
+            )}
+            {children}
+          </>
+        )}
       </section>
     </CarouselContext.Provider>
   );
