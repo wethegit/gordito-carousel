@@ -4,7 +4,6 @@ import {
   createContext,
   createElement,
   cloneElement,
-  Fragment,
   isValidElement,
   useContext,
   useEffect,
@@ -139,7 +138,7 @@ export function Carousel({
       setCarousel(null);
       setRenderPlan(null);
     };
-  }, [options, items === undefined]);
+  }, [options, items === undefined, listAs, trackAs]);
 
   useIsomorphicLayoutEffect(() => {
     if (previousItems.current === items) return;
@@ -147,20 +146,17 @@ export function Carousel({
     if (items !== undefined && carousel?.enabled) carousel.refresh();
   }, [items, carousel]);
 
-  const itemsChanged = previousItems.current !== items;
-  const activePlan = itemsChanged ? null : renderPlan;
-
   useIsomorphicLayoutEffect(() => {
-    if (items !== undefined && activePlan && carousel) {
-      carousel.commitRenderPlan(activePlan.id);
+    if (items !== undefined && renderPlan && carousel) {
+      carousel.commitRenderPlan(renderPlan.id);
     }
-  }, [items, activePlan, carousel]);
+  }, [items, renderPlan, carousel]);
 
   const slideNodes =
     items === undefined
       ? children
       : (
-          activePlan?.slides ??
+          renderPlan?.slides ??
           items.map((_, index) => ({ index, sourceIndex: index, isClone: false }))
         ).map((slide) => {
           const item = items[slide.sourceIndex];
@@ -174,9 +170,10 @@ export function Carousel({
             'data-wtcg-slide': '',
             'data-wtcg-index': String(slide.index),
             'data-wtcg-cloned': slide.isClone ? '' : undefined,
+            'data-wtcg-source-index': String(slide.sourceIndex),
           };
 
-          if (isValidElement(item) && item.type !== Fragment) {
+          if (isValidElement(item) && typeof item.type === 'string') {
             return cloneElement(
               item as ReactElement<Record<string, unknown>>,
               attributes as Record<string, unknown>,

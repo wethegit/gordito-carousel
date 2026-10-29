@@ -365,9 +365,17 @@ export class WtcGorditoCarousel {
     if (this.options.onRenderPlan) {
       const slides: WtcGorditoCarouselRenderSlide[] = [];
       for (let index = -this.cloneCount; index < this.slideCount + this.cloneCount; index += 1) {
+        const source = this.originalSlides[modulo(index, this.slideCount)];
+        const sourceAttribute = source?.getAttribute('data-wtcg-source-index');
+        const sourceIndex = Number(sourceAttribute);
         slides.push({
           index,
-          sourceIndex: modulo(index, this.slideCount),
+          sourceIndex:
+            sourceAttribute !== null &&
+            sourceAttribute !== undefined &&
+            Number.isInteger(sourceIndex)
+              ? sourceIndex
+              : modulo(index, this.slideCount),
           isClone: index < 0 || index >= this.slideCount,
         });
       }
@@ -680,6 +688,19 @@ export class WtcGorditoCarousel {
   refresh(initializing = false): void {
     const previous = this.currentSlide;
 
+    if (this.options.onRenderPlan) {
+      this.originalSlides.forEach((slide) => {
+        const style = document.createElement('div').style;
+        style.cssText = slide.style.cssText;
+        style.removeProperty('--wtcg-slide-index');
+        style.removeProperty('--wtcg-slide-render-index');
+        style.removeProperty('--wtcg-slide-offset');
+        style.removeProperty('--wtcg-slide-distance');
+        style.removeProperty('--wtcg-slide-side');
+        slide.setAttribute('data-wtcg-original-style', style.cssText);
+      });
+    }
+
     this.destroy(true);
 
     this.currentSlide = clamp(previous, 0, Math.max(0, this.collectDirectSlides().length - 1));
@@ -710,6 +731,8 @@ export class WtcGorditoCarousel {
       plan.slides.some(
         (item, index) =>
           renderedSlides[index]?.getAttribute('data-wtcg-index') !== String(item.index) ||
+          renderedSlides[index]?.getAttribute('data-wtcg-source-index') !==
+            String(item.sourceIndex) ||
           renderedSlides[index]?.hasAttribute('data-wtcg-cloned') !== item.isClone,
       )
     ) {
@@ -1980,6 +2003,10 @@ export class WtcGorditoCarousel {
    * @fires wtcg:reInit
    */
   filterSlides(filter: string | ((slide: HTMLElement, index: number) => boolean)): void {
+    if (this.options.onRenderPlan) {
+      throw new Error('filterSlides is not supported with externally rendered slides.');
+    }
+
     this.destroy(true);
 
     const all = this.collectDirectSlides();
@@ -2001,6 +2028,10 @@ export class WtcGorditoCarousel {
    * @fires wtcg:reInit
    */
   unfilterSlides(): void {
+    if (this.options.onRenderPlan) {
+      throw new Error('unfilterSlides is not supported with externally rendered slides.');
+    }
+
     this.destroy(true);
 
     this.filteredSlides = null;
