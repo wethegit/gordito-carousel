@@ -61,6 +61,7 @@ export function Carousel({
   const [currentSlide, setCurrentSlide] = useState(options?.initialSlide ?? 0);
   const [renderPlan, setRenderPlan] = useState<WtcGorditoCarouselRenderPlan | null>(null);
   const previousItems = useRef(items);
+  const previousSlideSelector = useRef(options?.slide);
 
   beforeChangeCallback.current = onBeforeChange;
   afterChangeCallback.current = onAfterChange;
@@ -68,6 +69,7 @@ export function Carousel({
   useIsomorphicLayoutEffect(() => {
     const element = root.current;
     if (!element) return;
+    previousSlideSelector.current = options?.slide;
 
     const handleBeforeChange = (event: Event) => {
       if (event.target !== element) return;
@@ -157,7 +159,12 @@ export function Carousel({
   let slideNodes = children;
   if (items !== undefined) {
     let slides = renderPlan?.slides ?? [];
-    if (!renderPlan || previousItems.current !== items) {
+    if (
+      !renderPlan ||
+      previousItems.current !== items ||
+      previousSlideSelector.current !== options?.slide
+    ) {
+      // Rediscover all sources without unmounting the existing keyed copies.
       const originals = items.map((_, index) => ({
         index,
         sourceIndex: index,
@@ -184,14 +191,21 @@ export function Carousel({
         'data-wtcg-source-index': String(slide.sourceIndex),
       };
 
-      if (isValidElement(item) && (typeof item.type === 'string' || item.type === CarouselItem)) {
+      const isListTrack = Track === 'ul' || Track === 'ol';
+      const element = isValidElement<{ as?: ElementType }>(item) ? item : null;
+      const itemType = element?.type === CarouselItem ? (element.props.as ?? 'li') : element?.type;
+      if (
+        element &&
+        (typeof element.type === 'string' || element.type === CarouselItem) &&
+        (!isListTrack || itemType === 'li')
+      ) {
         return cloneElement(
-          item as ReactElement<Record<string, unknown>>,
+          element as ReactElement<Record<string, unknown>>,
           attributes as Record<string, unknown>,
         );
       }
 
-      const Item = Track === 'ul' || Track === 'ol' ? 'li' : 'div';
+      const Item = isListTrack ? 'li' : 'div';
       return createElement(Item, attributes, item as ReactNode);
     });
   }
@@ -203,7 +217,7 @@ export function Carousel({
         currentSlide,
         setPosition: () => carousel?.setPosition(),
         swipe: (direction) => {
-          if (!carousel) return;
+          if (!carousel?.enabled || carousel.pendingRenderPlan) return;
           carousel.slider.dispatchEvent(
             new CustomEvent('wtcg:swipe', {
               bubbles: true,
@@ -242,7 +256,10 @@ export function CarouselList<T extends ElementType = 'div'>({
   ...props
 }: MarkerProps<T>): ReactElement {
   const Element = as ?? 'div';
-  return createElement(Element, { ...props, 'data-wtcg-list': '' } as ComponentPropsWithoutRef<T>);
+  return createElement(Element, {
+    ...props,
+    'data-wtcg-list': '',
+  } as ComponentPropsWithoutRef<T>);
 }
 
 export function CarouselTrack<T extends ElementType = 'ul'>({
@@ -250,7 +267,10 @@ export function CarouselTrack<T extends ElementType = 'ul'>({
   ...props
 }: MarkerProps<T>): ReactElement {
   const Element = as ?? 'ul';
-  return createElement(Element, { ...props, 'data-wtcg-track': '' } as ComponentPropsWithoutRef<T>);
+  return createElement(Element, {
+    ...props,
+    'data-wtcg-track': '',
+  } as ComponentPropsWithoutRef<T>);
 }
 
 export function CarouselItem<T extends ElementType = 'li'>({
@@ -258,7 +278,10 @@ export function CarouselItem<T extends ElementType = 'li'>({
   ...props
 }: MarkerProps<T>): ReactElement {
   const Element = as ?? 'li';
-  return createElement(Element, { ...props, 'data-wtcg-slide': '' } as ComponentPropsWithoutRef<T>);
+  return createElement(Element, {
+    ...props,
+    'data-wtcg-slide': '',
+  } as ComponentPropsWithoutRef<T>);
 }
 
 export function CarouselSlide<T extends ElementType = 'div'>({
@@ -266,7 +289,10 @@ export function CarouselSlide<T extends ElementType = 'div'>({
   ...props
 }: MarkerProps<T>): ReactElement {
   const Element = as ?? 'div';
-  return createElement(Element, { ...props, 'data-wtcg-slide': '' } as ComponentPropsWithoutRef<T>);
+  return createElement(Element, {
+    ...props,
+    'data-wtcg-slide': '',
+  } as ComponentPropsWithoutRef<T>);
 }
 
 export function CarouselPagination({ ...props }: HTMLAttributes<HTMLOListElement>) {

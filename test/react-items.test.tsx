@@ -48,7 +48,9 @@ async function render(
 
 describe('React items mode', () => {
   it.each([false, true])('renders appended items with infinite=%s', async (infinite) => {
-    const captured: { current: WtcGorditoCarousel | null } = { current: null };
+    const captured: { current: WtcGorditoCarousel | null } = {
+      current: null,
+    };
     const stableOptions = { infinite };
     const items = [<div key="first">First</div>, <div key="second">Second</div>];
     const capture = (value: WtcGorditoCarousel | null) => (captured.current = value);
@@ -80,7 +82,9 @@ describe('React items mode', () => {
   });
 
   it.each([false, true])('populates initially empty items with infinite=%s', async (infinite) => {
-    const captured: { current: WtcGorditoCarousel | null } = { current: null };
+    const captured: { current: WtcGorditoCarousel | null } = {
+      current: null,
+    };
     const stableOptions = { infinite };
     const capture = (value: WtcGorditoCarousel | null) => (captured.current = value);
     await act(() =>
@@ -211,9 +215,9 @@ describe('React items mode', () => {
     expect(updatedCopy.textContent).toBe('Updated:1');
 
     await render([
-      <div key="first" style={{ color: 'green' }}>
+      <CarouselItem key="first" style={{ color: 'green' }}>
         First
-      </div>,
+      </CarouselItem>,
       <div key="second">Second</div>,
     ]);
     expect(
@@ -226,13 +230,13 @@ describe('React items mode', () => {
   it('keeps source item identity through selection and rejects runtime filtering', async () => {
     const captured: { current: WtcGorditoCarousel | null } = { current: null };
     const items = [
-      <div key="excluded">Excluded</div>,
-      <div key="second" className="included">
+      <CarouselItem key="excluded">Excluded</CarouselItem>,
+      <CarouselItem key="second" className="included">
         Second
-      </div>,
-      <div key="third" className="included">
+      </CarouselItem>,
+      <CarouselItem key="third" className="included">
         Third
-      </div>,
+      </CarouselItem>,
     ];
 
     await act(() =>

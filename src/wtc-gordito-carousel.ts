@@ -597,7 +597,10 @@ export class WtcGorditoCarousel {
     this.pendingRenderPlan = null;
     this.pendingRenderEvent = null;
 
-    this.originalSlides.forEach((slide) => {
+    const slides = this.options.onRenderPlan
+      ? [...new Set([...this.originalSlides, ...this.allSlides])]
+      : this.originalSlides;
+    slides.forEach((slide) => {
       slide.removeAttribute('data-wtcg-active');
       slide.removeAttribute('data-wtcg-current');
       slide.removeAttribute('data-wtcg-center');
@@ -605,8 +608,17 @@ export class WtcGorditoCarousel {
 
       slide.inert = false;
 
-      const originalStyle = slide.getAttribute('data-wtcg-original-style');
-      if (originalStyle !== null) slide.setAttribute('style', originalStyle);
+      if (this.options.onRenderPlan) {
+        // External renderers may have updated author styles since initialization.
+        slide.style.removeProperty('--wtcg-slide-index');
+        slide.style.removeProperty('--wtcg-slide-render-index');
+        slide.style.removeProperty('--wtcg-slide-offset');
+        slide.style.removeProperty('--wtcg-slide-distance');
+        slide.style.removeProperty('--wtcg-slide-side');
+      } else {
+        const originalStyle = slide.getAttribute('data-wtcg-original-style');
+        if (originalStyle !== null) slide.setAttribute('style', originalStyle);
+      }
 
       slide.removeAttribute('data-wtcg-original-style');
     });
@@ -688,19 +700,6 @@ export class WtcGorditoCarousel {
   refresh(initializing = false): void {
     const previous = this.currentSlide;
 
-    if (this.options.onRenderPlan) {
-      this.originalSlides.forEach((slide) => {
-        const style = document.createElement('div').style;
-        style.cssText = slide.style.cssText;
-        style.removeProperty('--wtcg-slide-index');
-        style.removeProperty('--wtcg-slide-render-index');
-        style.removeProperty('--wtcg-slide-offset');
-        style.removeProperty('--wtcg-slide-distance');
-        style.removeProperty('--wtcg-slide-side');
-        slide.setAttribute('data-wtcg-original-style', style.cssText);
-      });
-    }
-
     this.destroy(true);
 
     this.currentSlide = clamp(previous, 0, Math.max(0, this.collectDirectSlides().length - 1));
@@ -710,7 +709,10 @@ export class WtcGorditoCarousel {
     this.init(false);
 
     if (this.pendingRenderPlan) this.pendingRenderEvent = initializing ? 'init' : 'reInit';
-    else dispatch(this.slider, initializing ? 'init' : 'reInit', { carousel: this });
+    else
+      dispatch(this.slider, initializing ? 'init' : 'reInit', {
+        carousel: this,
+      });
   }
 
   /**
@@ -1434,7 +1436,7 @@ export class WtcGorditoCarousel {
    * @fires wtcg:beforeChange
    */
   changeSlide(index: number, dontAnimate = false): void {
-    if (!this.enabled || !this.slideCount) return;
+    if (!this.enabled || !this.slideCount || this.pendingRenderPlan) return;
     if (this.animating && this.options.waitForAnimate) return;
 
     let targetOriginal = index;
@@ -1646,6 +1648,7 @@ export class WtcGorditoCarousel {
    * @param {PointerEvent} event
    */
   handlePointerDown(event: PointerEvent): void {
+    if (this.pendingRenderPlan) return;
     if (!this.isDraggable || !event.isPrimary || event.button !== 0 || this.pointer) return;
     if (this.animating && this.options.waitForAnimate) return;
 
@@ -1941,6 +1944,10 @@ export class WtcGorditoCarousel {
    * @fires wtcg:reInit
    */
   addSlide(markup: HTMLElement | string, index = this.slideCount, addBefore = false): void {
+    if (this.options.onRenderPlan) {
+      throw new Error('addSlide is not supported with externally rendered slides.');
+    }
+
     let element: HTMLElement = markup as HTMLElement;
     if (!(markup instanceof HTMLElement)) {
       // Parses an HTML string into a single `Element`.
@@ -1979,6 +1986,10 @@ export class WtcGorditoCarousel {
    * @fires wtcg:reInit
    */
   removeSlide(index: number, removeBefore = false, removeAll = false): void {
+    if (this.options.onRenderPlan) {
+      throw new Error('removeSlide is not supported with externally rendered slides.');
+    }
+
     this.destroy(true);
 
     const slides = this.collectDirectSlides();
