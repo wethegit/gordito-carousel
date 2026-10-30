@@ -87,6 +87,7 @@ import {
   Carousel,
   CarouselList,
   CarouselTrack,
+  CarouselItem,
   CarouselSlide,
   CarouselPrevious,
   CarouselNext,
@@ -102,15 +103,16 @@ function CurrentSlide() {
 
 function Gallery() {
   return (
-    <Carousel options={{ infinite: true, pagination: true }} aria-label="Featured items">
+    <Carousel
+      items={[
+        <CarouselItem key="first">First slide</CarouselItem>,
+        <CarouselItem key="second">Second slide</CarouselItem>,
+        <CarouselItem key="third">Third slide</CarouselItem>,
+      ]}
+      options={{ infinite: true, pagination: true }}
+      aria-label="Featured items"
+    >
       <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>
-      <CarouselList className="gallery-list">
-        <CarouselTrack as="ul" className="gallery-track">
-          <CarouselSlide as="li">First slide</CarouselSlide>
-          <CarouselSlide as="li">Second slide</CarouselSlide>
-          <CarouselSlide as="li">Third slide</CarouselSlide>
-        </CarouselTrack>
-      </CarouselList>
       <CarouselNext aria-label="Next slide">Next</CarouselNext>
       <CarouselPagination aria-label="Choose slide">
         <li>
@@ -129,9 +131,20 @@ function Gallery() {
 }
 ```
 
-`CarouselList`, `CarouselTrack`, and `CarouselSlide` accept an `as` prop for choosing semantic
-elements and otherwise pass through the selected element's React props. The control components
-render buttons and attach the matching core attributes. `useCarousel()` provides the active core instance (initially `null`), its `currentSlide`, and
+When `items` is provided, `Carousel` renders the list and track for you and passes each item through
+as a slide root (custom components other than `CarouselItem` and non-element nodes receive an `li`
+root for `ul`/`ol` tracks, or a `div` root otherwise). The core publishes a render plan and waits
+for React to commit it before measuring; infinite copies therefore retain React handlers and update
+with their source items. Each copy is a separate component instance, so local state and effects are
+not shared, and repeated DOM IDs should be avoided. Use stable keys for items and replace the `items`
+array when its contents change. `listAs` and `trackAs` select the generated structure's elements,
+defaulting to `div` and `ul`. `CarouselItem` defaults to `li` and accepts an `as` prop.
+
+Without `items`, author the structure with `CarouselList`, `CarouselTrack` (a `ul` by default), and
+`CarouselItem`. `CarouselSlide` remains available with a `div` default. These components accept an
+`as` prop for choosing semantic elements and otherwise pass
+through the selected element's React props. The control components render buttons and attach the
+matching core attributes. `useCarousel()` provides the active core instance (initially `null`), its `currentSlide`, and
 `setPosition()` and `swipe('next' | 'previous')` methods. `Carousel` supports both
 `onBeforeChange(currentSlide, nextSlide, carousel)` and `onAfterChange(currentSlide, carousel)`.
 Use a stable `options` object when it is created during render because changing that object
