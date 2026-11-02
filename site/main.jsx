@@ -102,6 +102,10 @@ function SourceCode({ markup, styles, script }) {
         View source code <span aria-hidden="true">＋</span>
       </summary>
       <div className="source-panel">
+        <p>
+          Markup shows one slide. Repeat it for your items. The CSS is specific to this demo, not
+          included in the package. Adapt its selectors and surrounding layout to your app.
+        </p>
         <div className="source-tabs" role="tablist" aria-label="Source code language">
           {tabs.map(([id, label]) => (
             <button
@@ -650,6 +654,16 @@ function FeatureFan() {
 // resolves under the site's base path.
 const MORE_DEMOS = [
   {
+    href: 'react/',
+    title: 'Gordito for React',
+    description: (
+      <>
+        Live, interactive React examples with infinite slides, editable items, and copyable source.
+        Try shared state, filters, and layout changes without leaving the site.
+      </>
+    ),
+  },
+  {
     href: 'path-carousel/',
     title: 'Along the way',
     description: (
@@ -733,7 +747,6 @@ function Docs() {
       <aside className="docs-nav">
         <p className="kicker">Documentation</p>
         <a href="#quick-start">Quick start</a>
-        <a href="#exports">Exports</a>
         <a href="#react">React</a>
         <a href="#contract">DOM contract</a>
         <a href="#accessibility">Accessibility</a>
@@ -765,63 +778,50 @@ function Docs() {
             }
           </Snippet>
         </section>
-        <section id="exports">
-          <p className="kicker">Public API</p>
-          <h2>Exports</h2>
-          <Table
-            headers={['Export', 'Purpose']}
-            rows={[
-              [<code>WtcGorditoCarousel</code>, 'Carousel class.'],
-              [<code>WTC_GORDITO_CAROUSEL_DEFAULTS</code>, 'Default option object.'],
-              [
-                <code>WTC_GORDITO_CAROUSEL_STATUS_TOKENS</code>,
-                <>
-                  <code>{'{current}'}</code> and <code>{'{total}'}</code> status template tokens.
-                </>,
-              ],
-            ]}
-          />
-        </section>
         <section id="react">
           <p className="kicker">React entry point</p>
-          <h2>Compose the carousel with React.</h2>
+          <h2>React</h2>
           <p>
-            Import the components from <code>@wethegit/gordito-carousel/react</code>. The React
-            entry point manages the core lifecycle, adds the structural attributes, and includes the
-            carousel styles. In server-component frameworks, use a client component for interactive
-            carousel usage.
+            Import from <code>@wethegit/gordito-carousel/react</code> and pass your slides through{' '}
+            <code>items</code>. The component creates the list and track, manages the core
+            lifecycle, and includes structural carousel CSS and animation-suppression rules. Add
+            your own layout and presentation styles. Use a client component in server-component
+            frameworks.
           </p>
           <Snippet label="React carousel" language="JS">
             {`'use client';
 import {
   Carousel,
-  CarouselList,
-  CarouselTrack,
-  CarouselSlide,
+  CarouselItem,
   CarouselPrevious,
   CarouselNext,
   useCarousel,
 } from '@wethegit/gordito-carousel/react';
 
+const options = { infinite: true };
+const items = [
+  <CarouselItem key="first">First slide</CarouselItem>,
+  <CarouselItem key="second">Second slide</CarouselItem>,
+];
+
 function CurrentSlide() {
-  const { currentSlide, swipe } = useCarousel();
-  return <button onClick={() => swipe('next')}>Slide {currentSlide + 1}</button>;
+  const { carousel, currentSlide, swipe } = useCarousel();
+  return (
+    <button type="button" disabled={!carousel} onClick={() => swipe('next')}>
+      Slide {currentSlide + 1} — next
+    </button>
+  );
 }
 
 function Gallery() {
   return (
     <Carousel
-      options={{ infinite: true }}
+      options={options}
+      items={items}
       aria-label="Featured items"
       onBeforeChange={(currentSlide, nextSlide) => console.log(currentSlide, nextSlide)}
     >
       <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>
-      <CarouselList>
-        <CarouselTrack as="ul">
-          <CarouselSlide as="li">First slide</CarouselSlide>
-          <CarouselSlide as="li">Second slide</CarouselSlide>
-        </CarouselTrack>
-      </CarouselList>
       <CarouselNext aria-label="Next slide">Next</CarouselNext>
       <CurrentSlide />
     </Carousel>
@@ -829,15 +829,26 @@ function Gallery() {
 }`}
           </Snippet>
           <p>
-            <code>CarouselList</code>, <code>CarouselTrack</code>, and <code>CarouselSlide</code>{' '}
-            accept <code>as</code> to choose a semantic element. <code>useCarousel()</code> provides
-            the core instance, <code>currentSlide</code>, <code>setPosition()</code>, and{' '}
-            <code>swipe('next' | 'previous')</code>. The root also accepts{' '}
-            <code>onBeforeChange</code> and <code>onAfterChange</code> callbacks.
+            With <code>items</code>, infinite copies are rendered by React with current content and
+            working handlers. The default track is a <code>ul</code>, and <code>CarouselItem</code>{' '}
+            renders an <code>li</code>. Each copy is a separate component instance, so keep shared
+            state above the slides.
           </p>
           <p>
-            React is a peer dependency; install React 18 or newer in your application. Keep the
-            <code>options</code> object stable to avoid reinitializing the carousel on each render.
+            Call <code>useCarousel()</code> from a descendant of <code>Carousel</code>. It provides
+            the core instance (initially <code>null</code>), zero-based <code>currentSlide</code>,{' '}
+            <code>setPosition()</code>, and <code>swipe('next' | 'previous')</code>. The root
+            accepts <code>onBeforeChange(current, next, carousel)</code> and{' '}
+            <code>onAfterChange(current, carousel)</code> callbacks.
+          </p>
+          <p>
+            Use React 18 or newer. Keep <code>options</code> stable to avoid recreating the core
+            instance. Use stable item keys and replace the <code>items</code> array when its content
+            changes. Without <code>items</code>, authored children use DOM cloning rather than
+            React-rendered copies.
+          </p>
+          <p>
+            <a href="react/">Try the live React examples and copy their source →</a>
           </p>
         </section>
         <section id="contract">
@@ -854,14 +865,15 @@ function Gallery() {
               <code>[data-wtcg-carousel]</code>: Carousel root.
             </li>
             <li>
-              <code>[data-wtcg-list]</code>: Viewport/list element.
+              <code>[data-wtcg-list]</code>: Viewport/list element, directly inside the carousel
+              root.
             </li>
             <li>
-              <code>[data-wtcg-track]</code>: Moving track element.
+              <code>[data-wtcg-track]</code>: Moving track element, directly inside the list.
             </li>
             <li>
-              <code>[data-wtcg-slide]</code>: Slide element. Direct children of the track are
-              treated as slides by default.
+              <code>[data-wtcg-slide]</code>: Slide element, directly inside the track. Unmarked
+              children are not slides.
             </li>
           </ul>
           <h3>Optional controls</h3>
@@ -941,9 +953,10 @@ function Gallery() {
           <p className="kicker">CSS model / advanced styling</p>
           <h2>CSS owns the animation.</h2>
           <p>
-            Library CSS is structural, uses low-specificity <code>:where([data-wtcg-*])</code>{' '}
-            selectors inside <code>@layer wtc-gordito-carousel</code>, and can be overridden by
-            ordinary app CSS.
+            The package provides structural CSS for carousel mechanics, not the demos’ visual
+            design. Set slide widths, viewport clipping, spacing, and presentation in your own CSS.
+            The core stylesheet uses low-specificity <code>:where([data-wtcg-*])</code> selectors
+            inside <code>@layer wtc-gordito-carousel</code>, so ordinary app CSS can override it.
           </p>
           <Snippet label="Basic transition" language="CSS">
             {
@@ -967,14 +980,15 @@ function Gallery() {
             ]}
           />
           <p>
-            <strong>Neither attribute should affect slide-level transitions</strong> such as opacity
-            and scale.
+            The library suppresses track transitions, not slide-level effects such as opacity and
+            scale. If your effects follow runtime slide variables, they may also need suppression
+            during dragging and instant corrections.
           </p>
           <h3>Mandatory suppression rules</h3>
           <p className="warning">
-            ⚠ If you override the track transition, you MUST also restore both suppression rules.
-            Otherwise the carousel can jank during drag and visible clone corrections. Consumer CSS
-            with non-zero specificity or unlayered CSS can override them accidentally.
+            When using the core stylesheet directly, include both suppression rules if you override
+            the track transition. Otherwise dragging and clone corrections can animate unexpectedly.
+            The React entry point already includes suppression overrides.
           </p>
           <Snippet label="Required override" language="CSS">
             {suppressCss}
@@ -986,9 +1000,9 @@ function Gallery() {
             layout.
           </p>
           <Snippet
-            label="Container query"
+            label="Responsive layout"
             language="CSS"
-          >{`.my-carousel { --wtcg-slides: 1; --wtcg-scroll: 1; --wtcg-slide-gap: 1rem; --wtcg-slide-size: 100cqw; container-type: inline-size; }\n@container (min-width: 42rem) { .my-carousel { --wtcg-slides: 3; --wtcg-scroll: 2; --wtcg-slide-size: calc((100cqw - var(--wtcg-slide-gap) * 2) / 3); } }`}</Snippet>
+          >{`.my-carousel { --wtcg-slides: 1; --wtcg-scroll: 1; --wtcg-slide-gap: 1rem; --wtcg-slide-size: 100cqw; container-type: inline-size; }\n@media (min-width: 42rem) { .my-carousel { --wtcg-slides: 3; --wtcg-scroll: 2; --wtcg-slide-size: calc((100cqw - var(--wtcg-slide-gap) * 2) / 3); } }`}</Snippet>
         </section>
         <section id="variables">
           <p className="kicker">Layout vocabulary</p>
@@ -1095,7 +1109,7 @@ function Gallery() {
               [
                 <code>touchThreshold</code>,
                 'number',
-                'Swipe threshold fraction; 5 means one-fifth width.',
+                'Fixed-mode swipe threshold: 5 means one-fifth of list width. Free drag snaps to the nearest slide.',
               ],
               [
                 <code>waitForAnimate</code>,
@@ -1108,19 +1122,26 @@ function Gallery() {
         <section id="methods">
           <p className="kicker">Imperative API</p>
           <h2>Methods & accessors</h2>
+          <p>
+            These methods belong to the core instance. With React <code>items</code>, update your
+            source array instead of calling <code>addSlide()</code>, <code>removeSlide()</code>,{' '}
+            <code>filterSlides()</code>, or <code>unfilterSlides()</code>. Those methods throw in
+            items mode because React owns the slide nodes.
+          </p>
           <Table
             headers={['Method', 'Description']}
             rows={[
               [<code>next(event?)</code>, 'Advance by --wtcg-scroll.'],
               [<code>prev(event?)</code>, 'Move backward by --wtcg-scroll.'],
               [<code>goTo(index, dontAnimate = false)</code>, 'Move to an original slide index.'],
+              [<code>setPosition()</code>, 'Remeasure and reposition after layout changes.'],
               [<code>getOption(option)</code>, 'Return a runtime option.'],
               [<code>setOption(option, value, refresh = false)</code>, 'Update one option.'],
               [<code>setOption(options, refresh = false)</code>, 'Update multiple options.'],
               [<code>refresh(initializing = false)</code>, 'Rebuild from current DOM and options.'],
               [
                 <code>destroy(refresh = false)</code>,
-                'Remove clones/listeners/state and restore originals.',
+                'Remove listeners and runtime state. Vanilla mode also removes DOM clones and restores saved slide styles.',
               ],
               [<code>addSlide(markup, index?, addBefore?)</code>, 'Add one slide and rebuild.'],
               [
@@ -1176,6 +1197,7 @@ function App() {
           <a href="#demos">Demos</a>
           <a href="#more">More demos</a>
           <a href="#docs">Docs</a>
+          <a href="react/">React</a>
           <a href="#contract">DOM contract</a>
           <a className="github" href="https://github.com/wethegit/gordito-carousel">
             GitHub ↗

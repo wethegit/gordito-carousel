@@ -1,6 +1,8 @@
 # WTC Gordito Carousel 🐽
 
-A small vanilla carousel core with an explicit DOM contract. The library owns behavior, runtime state, and measurement. Authors own markup, semantics, layout styling, and animation.
+A small vanilla carousel core with an explicit DOM contract and an optional React entry point. The library handles interaction, runtime state, and measurement. You choose the content, semantics, layout, and presentation.
+
+The package includes structural CSS for carousel mechanics, not the demos' visual design. Set slide widths, viewport clipping, spacing, and appearance in your own CSS.
 
 ## Quick Start
 
@@ -78,23 +80,33 @@ Options can also be set in markup. Programmatic settings are merged first, then 
 
 ## React
 
-The React components are available from the `react/` entry point. They add the required
-`data-wtcg-*` attributes, initialize and destroy the carousel with the component lifecycle, and
-include the animation-suppression styles automatically.
+[Try the live React examples](https://wethegit.github.io/gordito-carousel/react/) for interactive
+infinite slides, editable items, filters, and copyable component examples.
+
+Import the components from `@wethegit/gordito-carousel/react` in a React 18 or newer app.
+They add the required markup and attributes, manage the core lifecycle, and import the structural
+carousel CSS and animation-suppression rules. Add your own layout and presentation styles.
+In server-component frameworks, use a client component for interactive carousel usage.
 
 ```tsx
+'use client';
+
 import {
   Carousel,
-  CarouselList,
-  CarouselTrack,
   CarouselItem,
-  CarouselSlide,
   CarouselPrevious,
   CarouselNext,
   CarouselPagination,
   CarouselPage,
   useCarousel,
 } from '@wethegit/gordito-carousel/react';
+
+const options = { infinite: true, pagination: true };
+const items = [
+  <CarouselItem key="first">First slide</CarouselItem>,
+  <CarouselItem key="second">Second slide</CarouselItem>,
+  <CarouselItem key="third">Third slide</CarouselItem>,
+];
 
 function CurrentSlide() {
   const { currentSlide } = useCarousel();
@@ -103,15 +115,7 @@ function CurrentSlide() {
 
 function Gallery() {
   return (
-    <Carousel
-      items={[
-        <CarouselItem key="first">First slide</CarouselItem>,
-        <CarouselItem key="second">Second slide</CarouselItem>,
-        <CarouselItem key="third">Third slide</CarouselItem>,
-      ]}
-      options={{ infinite: true, pagination: true }}
-      aria-label="Featured items"
-    >
+    <Carousel items={items} options={options} aria-label="Featured items">
       <CarouselPrevious aria-label="Previous slide">Previous</CarouselPrevious>
       <CarouselNext aria-label="Next slide">Next</CarouselNext>
       <CarouselPagination aria-label="Choose slide">
@@ -131,33 +135,41 @@ function Gallery() {
 }
 ```
 
-When `items` is provided, `Carousel` renders the list and track for you and passes each item through
-as a slide root (custom components other than `CarouselItem` and non-element nodes receive an `li`
-root for `ul`/`ol` tracks, or a `div` root otherwise). The core publishes a render plan and waits
-for React to commit it before measuring; infinite copies therefore retain React handlers and update
-with their source items. Each copy is a separate component instance, so local state and effects are
-not shared, and repeated DOM IDs should be avoided. Use stable keys for items and replace the `items`
-array when its contents change. `listAs` and `trackAs` select the generated structure's elements,
-defaulting to `div` and `ul`. `CarouselItem` defaults to `li` and accepts an `as` prop.
+With `items`, `Carousel` generates the list and track. Infinite copies are rendered by React,
+so their handlers work and their content stays up to date. Each copy is a separate component
+instance with its own state and effects. Keep shared state above the slides, and avoid fixed DOM
+IDs that would be repeated across copies.
 
-Without `items`, author the structure with `CarouselList`, `CarouselTrack` (a `ul` by default), and
-`CarouselItem`. `CarouselSlide` remains available with a `div` default. These components accept an
-`as` prop for choosing semantic elements and otherwise pass
-through the selected element's React props. The control components render buttons and attach the
-matching core attributes. `useCarousel()` provides the active core instance (initially `null`), its `currentSlide`, and
-`setPosition()` and `swipe('next' | 'previous')` methods. `Carousel` supports both
-`onBeforeChange(currentSlide, nextSlide, carousel)` and `onAfterChange(currentSlide, carousel)`.
-Use a stable `options` object when it is created during render because changing that object
-reinitializes the carousel.
+`listAs` and `trackAs` choose the generated elements and default to `div` and `ul`. List tracks use
+`li` slide roots. Compatible `li` and `CarouselItem` elements pass through, while other content is
+wrapped in an `li`. On non-list tracks, intrinsic elements and `CarouselItem` pass through, while
+other content gets a `div` wrapper. `CarouselItem` defaults to `li` and accepts an `as` prop.
+Put slide-level styles and selector classes on the slide root.
+
+Call `useCarousel()` from a descendant of `Carousel`. It provides the core instance (initially
+`null`), zero-based `currentSlide`, `setPosition()`, and `swipe('next' | 'previous')`.
+`Carousel` accepts `onBeforeChange(currentSlide, nextSlide, carousel)` and
+`onAfterChange(currentSlide, carousel)` callbacks. The control components render buttons with the
+matching core attributes.
+
+Use stable item keys and replace the `items` array when its content changes. Keep `options` stable
+unless the configuration changes. A new options object recreates core and starts from
+`initialSlide`, which defaults to zero. This pagination example uses the default one-slide/one-step
+configuration.
+
+Without `items`, you can author the structure with `CarouselList`, `CarouselTrack`, and
+`CarouselItem`. `CarouselSlide` is also available with a `div` default. These structural components
+accept `as` and pass through the chosen element's props. This mode uses DOM cloning for infinite
+copies, which does not copy React event handlers. Use `items` for interactive infinite slides.
 
 ## DOM Contract
 
 Required elements:
 
 - `[data-wtcg-carousel]`: Carousel root.
-- `[data-wtcg-list]`: Viewport/list element.
-- `[data-wtcg-track]`: Moving track element.
-- `[data-wtcg-slide]`: Slide element. Direct children of the track are treated as slides by default.
+- `[data-wtcg-list]`: Viewport/list element, directly inside the carousel root.
+- `[data-wtcg-track]`: Moving track element, directly inside the list.
+- `[data-wtcg-slide]`: Slide element, directly inside the track. Unmarked children are not slides.
 
 Optional controls:
 
@@ -282,7 +294,9 @@ Animation is CSS-owned. Core styles include a basic transform transition, the co
 | `[data-wtcg-instant]`  | `[data-wtcg-carousel]` | Invisible position corrections: initial layout, responsive refresh, infinite-loop clone normalization. |
 | `[data-wtcg-dragging]` | `[data-wtcg-carousel]` | Active pointer drag — the track must follow the pointer, not animate.                                  |
 
-**Neither attribute should affect slide-level transitions (opacity, scale, etc.).** Slide transitions remain active during both drag and instant corrections.
+The library suppresses track transitions, not slide-level effects such as opacity and scale.
+If your effects follow runtime slide variables, you may also need to suppress those effects during
+dragging and instant corrections so they follow the pointer and do not animate clone normalization.
 
 ### Mandatory suppression rules
 
@@ -290,7 +304,8 @@ Animation is CSS-owned. Core styles include a basic transform transition, the co
 
 The core library ships the suppression rules in `@layer wtc-gordito-carousel` using `:where()` (zero specificity). Any consumer CSS with non-zero specificity or unlayered CSS will override BOTH the default transition AND the suppression rules — even accidentally.
 
-Minimal required suppression when customizing the track transition:
+The React entry point already imports suppression overrides. When using the core stylesheet
+directly, include these rules when customizing the track transition:
 
 ```css
 .my-carousel {
@@ -320,7 +335,7 @@ Responsive behavior is CSS-first. Change custom properties with media queries or
   container-type: inline-size;
 }
 
-@container (min-width: 42rem) {
+@media (min-width: 42rem) {
   .my-carousel {
     --wtcg-slides: 3;
     --wtcg-scroll: 2;
@@ -360,7 +375,7 @@ Runtime slide variables written by JavaScript:
 | `[data-wtcg-active]`      | Core  | `[data-wtcg-slide]`    | Rendered slide is in the active visible range, or pagination control represents the current range.                                                                                                                                     |
 | `[data-wtcg-current]`     | Core  | `[data-wtcg-slide]`    | Rendered slide representing the current logical slide.                                                                                                                                                                                 |
 | `[data-wtcg-center]`      | Core  | `[data-wtcg-carousel]` | Root uses center mode, or rendered slide is currently centered.                                                                                                                                                                        |
-| `[data-wtcg-draggable]`   | Core  | `[data-wtcg-carousel]` | Pointer dragging is enabled on the carousel. **Consumers who override the track transition MUST suppress it under this attribute (see CSS Model section).**                                                                            |
+| `[data-wtcg-draggable]`   | Core  | `[data-wtcg-carousel]` | Pointer dragging is enabled on the carousel. This is a capability flag, not an active drag state.                                                                                                                                      |
 | `[data-wtcg-dragging]`    | Core  | `[data-wtcg-carousel]` | Pointer drag is active on the carousel. Track transform must follow the pointer. **Consumers who override the track transition MUST suppress it under this attribute (see CSS Model section).**                                        |
 | `[data-wtcg-instant]`     | Core  | `[data-wtcg-carousel]` | Track transform must not animate. Set during initial layout, responsive refresh, and infinite-loop clone normalization. **Consumers who override the track transition MUST suppress it under this attribute (see CSS Model section).** |
 
@@ -410,26 +425,31 @@ new WtcGorditoCarousel(element, {
 | `infinite`       | `boolean`                          | Clone edge slides so movement can wrap.                                                                                            |
 | `initialSlide`   | `number`                           | Zero-based initial original slide index.                                                                                           |
 | `slide`          | `string`                           | Optional selector to narrow which direct `[data-wtcg-slide]` children participate.                                                 |
-| `touchThreshold` | `number`                           | Swipe threshold as a fraction of carousel width. `5` means one-fifth of the width.                                                 |
+| `touchThreshold` | `number`                           | Fixed-mode swipe threshold as a fraction of list width. `5` means one-fifth. Free drag snaps to the nearest slide.                 |
 | `waitForAnimate` | `boolean`                          | Block navigation while a transition runs. When `false` (default), new requests redirect the moving track.                          |
 
 ## Methods
 
-| Method                                            | Description                                                                          |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `next(event?)`                                    | Advance by `--wtcg-scroll`.                                                          |
-| `prev(event?)`                                    | Move backward by `--wtcg-scroll`.                                                    |
-| `goTo(index, dontAnimate = false)`                | Move to an original slide index.                                                     |
-| `getOption(option)`                               | Return a runtime option value.                                                       |
-| `setOption(option, value, refresh = false)`       | Update one option. Pass `refresh: true` for layout/control changes.                  |
-| `setOption(options, refresh = false)`             | Update multiple options.                                                             |
-| `refresh(initializing = false)`                   | Rebuild from current DOM children and options.                                       |
-| `destroy(refresh = false)`                        | Remove clones/listeners/state and restore original slides.                           |
-| `addSlide(markup, index?, addBefore?)`            | Add one slide and rebuild. Prefer declarative DOM changes in framework integrations. |
-| `removeSlide(index, removeBefore?, removeAll?)`   | Remove one or all slides and rebuild.                                                |
-| `filterSlides(filter)`                            | Filter original slides by selector or predicate and rebuild.                         |
-| `unfilterSlides()`                                | Clear the active filter and rebuild.                                                 |
-| `WtcGorditoCarousel.initAll(selector?, options?)` | Initialize all matching elements.                                                    |
+These methods belong to the core instance. With React `items`, update the source array instead of
+calling `addSlide()`, `removeSlide()`, `filterSlides()`, or `unfilterSlides()`. Those methods throw
+in items mode because React owns the slide nodes.
+
+| Method                                            | Description                                                                                                 |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `next(event?)`                                    | Advance by `--wtcg-scroll`.                                                                                 |
+| `prev(event?)`                                    | Move backward by `--wtcg-scroll`.                                                                           |
+| `goTo(index, dontAnimate = false)`                | Move to an original slide index.                                                                            |
+| `setPosition()`                                   | Remeasure and reposition after layout changes.                                                              |
+| `getOption(option)`                               | Return a runtime option value.                                                                              |
+| `setOption(option, value, refresh = false)`       | Update one option. Pass `refresh: true` for layout/control changes.                                         |
+| `setOption(options, refresh = false)`             | Update multiple options.                                                                                    |
+| `refresh(initializing = false)`                   | Rebuild from current DOM children and options.                                                              |
+| `destroy(refresh = false)`                        | Remove listeners and runtime state. In vanilla mode, also remove DOM clones and restore saved slide styles. |
+| `addSlide(markup, index?, addBefore?)`            | Add one slide and rebuild in DOM-owned mode.                                                                |
+| `removeSlide(index, removeBefore?, removeAll?)`   | Remove one or all slides and rebuild.                                                                       |
+| `filterSlides(filter)`                            | Filter original slides by selector or predicate and rebuild.                                                |
+| `unfilterSlides()`                                | Clear the active filter and rebuild.                                                                        |
+| `WtcGorditoCarousel.initAll(selector?, options?)` | Initialize all matching elements.                                                                           |
 
 ## Accessors
 

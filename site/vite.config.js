@@ -62,6 +62,7 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       input: {
         main: resolve(repoRoot, 'site/index.html'),
+        react: resolve(repoRoot, 'site/react/index.html'),
         'path-carousel': resolve(repoRoot, 'site/path-carousel/index.html'),
         'split-flap': resolve(repoRoot, 'site/split-flap/index.html'),
       },

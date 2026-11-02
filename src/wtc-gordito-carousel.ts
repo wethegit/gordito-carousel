@@ -1651,6 +1651,15 @@ export class WtcGorditoCarousel {
     if (this.pendingRenderPlan) return;
     if (!this.isDraggable || !event.isPrimary || event.button !== 0 || this.pointer) return;
     if (this.animating && this.options.waitForAnimate) return;
+    // Capturing these pointers would retarget native clicks away from their controls.
+    if (
+      event.target instanceof Element &&
+      event.target.closest(
+        'button, a, input, select, textarea, [contenteditable=""], [contenteditable="true" i], [contenteditable="plaintext-only" i], [role="button"], [role="link"]',
+      )
+    ) {
+      return;
+    }
 
     // Grabbing the track mid-transition: freeze it where it is rendered so the
     // drag starts under the pointer. The interrupted move settles on release.
