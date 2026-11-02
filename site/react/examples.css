@@ -155,3 +155,45 @@
   max-width: 44rem;
   margin-inline: auto;
 }
+
+.react-featured-bleed {
+  width: 100cqw;
+  margin-inline-start: calc(50% - 50cqw);
+}
+
+.react-featured-carousel {
+  margin-top: 0;
+}
+
+.react-featured-carousel [data-wtcg-list] {
+  min-height: 460px;
+  border-radius: 0;
+}
+
+.react-featured-carousel .photo-slide {
+  margin-inline: auto;
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 42px #10182038;
+}
+
+.react-featured-carousel .photo-slide figcaption em {
+  color: var(--muted);
+}
+
+.react-featured-carousel > .react-status {
+  margin: 1rem auto;
+  padding-inline: 20px;
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .react-featured-carousel [data-wtcg-list] {
+    min-height: 330px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-featured-carousel .photo-slide {
+    transition: none;
+  }
+}
