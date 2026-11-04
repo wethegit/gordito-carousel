@@ -38,10 +38,13 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Check
         run: npm run check
+
+      - name: Tests
+        run: npm run test
 
       - name: Create release pull request or publish
         uses: changesets/action@v2
