@@ -1,5 +1,5 @@
 ---
-'@wethegit/gordito-carousel': minor
+'@wethegit/gordito-carousel': major
 ---
 
 Add a typed React entry point with lifecycle management and React-owned infinite slide copies.
