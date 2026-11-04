@@ -209,7 +209,7 @@ function App() {
           <section className="react-usage" id="usage" aria-labelledby="usage-title">
             <p className="kicker">Take it with you</p>
             <h2 id="usage-title">A few things to know</h2>
-            <p>Install the package in your React app:</p>
+            <p>Use React 19 or newer, then install the package in your app:</p>
             <pre className="react-install">
               <code>npm install @wethegit/gordito-carousel</code>
             </pre>

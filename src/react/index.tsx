@@ -6,7 +6,6 @@ import {
   cloneElement,
   isValidElement,
   useContext,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -32,7 +31,6 @@ export interface CarouselContextValue {
 }
 
 const CarouselContext = createContext<CarouselContextValue | null>(null);
-const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 export interface CarouselProps extends HTMLAttributes<HTMLElement> {
   children?: ReactNode;
@@ -66,7 +64,7 @@ export function Carousel({
   beforeChangeCallback.current = onBeforeChange;
   afterChangeCallback.current = onAfterChange;
 
-  useIsomorphicLayoutEffect(() => {
+  useLayoutEffect(() => {
     const element = root.current;
     if (!element) return;
     previousSlideSelector.current = options?.slide;
@@ -142,13 +140,13 @@ export function Carousel({
     };
   }, [options, items === undefined, listAs, trackAs]);
 
-  useIsomorphicLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (previousItems.current === items) return;
     previousItems.current = items;
     if (items !== undefined && carousel?.enabled) carousel.refresh();
   }, [items, carousel]);
 
-  useIsomorphicLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (items !== undefined && renderPlan && carousel) {
       carousel.commitRenderPlan(renderPlan.id);
     }

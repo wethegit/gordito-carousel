@@ -83,7 +83,7 @@ Options can also be set in markup. Programmatic settings are merged first, then 
 [Try the live React examples](https://wethegit.github.io/gordito-carousel/react/) for interactive
 infinite slides, editable items, filters, and copyable component examples.
 
-Import the components from `@wethegit/gordito-carousel/react` in a React 18 or newer app.
+Import the components from `@wethegit/gordito-carousel/react` in a React 19 or newer app.
 They add the required markup and attributes, manage the core lifecycle, and import the structural
 carousel CSS and animation-suppression rules. Add your own layout and presentation styles.
 In server-component frameworks, use a client component for interactive carousel usage.

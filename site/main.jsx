@@ -842,7 +842,7 @@ function Gallery() {
             <code>onAfterChange(current, carousel)</code> callbacks.
           </p>
           <p>
-            Use React 18 or newer. Keep <code>options</code> stable to avoid recreating the core
+            Use React 19 or newer. Keep <code>options</code> stable to avoid recreating the core
             instance. Use stable item keys and replace the <code>items</code> array when its content
             changes. Without <code>items</code>, authored children use DOM cloning rather than
             React-rendered copies.
