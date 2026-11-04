@@ -1,0 +1,6 @@
+@import '../wtc-gordito-carousel.css';
+
+[data-wtcg-carousel][data-wtcg-instant] [data-wtcg-track],
+[data-wtcg-carousel][data-wtcg-dragging] [data-wtcg-track] {
+  transition: none !important;
+}

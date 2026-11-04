@@ -9,4 +9,6 @@ export type {
   WtcGorditoCarouselOptions,
   WtcGorditoCarouselOptionValue,
   WtcGorditoCarouselTarget,
+  WtcGorditoCarouselRenderPlan,
+  WtcGorditoCarouselRenderSlide,
 } from './wtc-gordito-carousel.js';

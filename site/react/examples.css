@@ -1,0 +1,199 @@
+.react-carousel {
+  container-type: inline-size;
+  --wtcg-slides: 1;
+  --wtcg-scroll: 1;
+  --wtcg-slide-gap: 1rem;
+  --wtcg-slide-size: 100cqw;
+}
+
+.react-carousel > [data-wtcg-list] {
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+.react-carousel [data-wtcg-track] {
+  list-style: none;
+}
+
+.react-card {
+  min-height: 21rem;
+  padding: clamp(1.25rem, 4cqw, 2.5rem);
+  border: 1px solid #c9c9cb;
+  border-radius: 0.75rem;
+  background: #fefce2;
+  color: #101820;
+}
+
+.react-card[data-wtcg-source-index='1'] {
+  background: #eff7eb;
+}
+
+.react-card[data-wtcg-source-index='2'] {
+  background: #e9f7fa;
+}
+
+.react-card-tag {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+.react-card-number {
+  display: block;
+  margin-block: 0.75rem;
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.4;
+}
+
+.react-card h3 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.5rem, 4cqw, 2.25rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.react-card-description {
+  margin: 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.react-card-actions {
+  margin-top: 1.5rem;
+}
+
+.react-toolbar,
+.react-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+
+.react-toolbar label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  font-size: 0.875rem;
+}
+
+.react-toolbar input[type='text'] {
+  width: 16rem;
+  max-width: 100%;
+  padding: 0.65rem;
+  border: 1px solid #939497;
+  border-radius: 0.25rem;
+  font: inherit;
+}
+
+.react-toolbar input[type='checkbox'] {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: #101820;
+}
+
+.react-toolbar button,
+.react-controls button,
+.react-card-actions button {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #101820;
+  border-radius: 0.25rem;
+  background: #fff;
+  color: #101820;
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.react-controls button,
+.react-card-actions button {
+  background: #101820;
+  color: #fff;
+}
+
+.react-toolbar button:disabled,
+.react-controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.react-carousel button:focus-visible,
+.react-toolbar :focus-visible {
+  outline: 3px solid #3958f3;
+  outline-offset: 3px;
+}
+
+.react-status {
+  margin-block: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.react-empty {
+  padding: 2rem;
+  border: 1px dashed #939497;
+  border-radius: 0.75rem;
+  text-align: center;
+}
+
+@media (min-width: 800px) {
+  .react-carousel {
+    --wtcg-slides: 2;
+    --wtcg-slide-size: calc((100cqw - var(--wtcg-slide-gap)) / 2);
+  }
+}
+
+/* Keep the two-item example navigable on wide screens, too. */
+.react-carousel--interactive {
+  --wtcg-slides: 1;
+  --wtcg-slide-size: 100cqw;
+  max-width: 44rem;
+  margin-inline: auto;
+}
+
+.react-featured-bleed {
+  width: 100cqw;
+  margin-inline-start: calc(50% - 50cqw);
+}
+
+.react-featured-carousel {
+  margin-top: 0;
+}
+
+.react-featured-carousel [data-wtcg-list] {
+  min-height: 460px;
+  border-radius: 0;
+}
+
+.react-featured-carousel .photo-slide {
+  margin-inline: auto;
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 42px #10182038;
+}
+
+.react-featured-carousel .photo-slide figcaption em {
+  color: var(--muted);
+}
+
+.react-featured-carousel > .react-status {
+  margin: 1rem auto;
+  padding-inline: 20px;
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .react-featured-carousel [data-wtcg-list] {
+    min-height: 330px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-featured-carousel .photo-slide {
+    transition: none;
+  }
+}
