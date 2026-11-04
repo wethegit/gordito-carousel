@@ -1,5 +1,11 @@
 # @wethegit/gordito-carousel
 
+## 2.0.0
+
+### Major Changes
+
+- [#9](https://github.com/wethegit/gordito-carousel/pull/9) [`5c11565`](https://github.com/wethegit/gordito-carousel/commit/5c11565a7827353d84ff7794141bfb99f9a49c41) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Add a typed React entry point for React 19 and newer with lifecycle management and React-owned infinite slide copies. React remains optional for vanilla carousel usage.
+
 ## 1.1.0
 
 ### Minor Changes
